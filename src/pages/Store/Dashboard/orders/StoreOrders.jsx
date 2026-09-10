@@ -98,7 +98,7 @@ const ORDER_STATUS_CONFIG = {
 };
 
 export default function StoreOrders() {
-  const [orders, setOrders] = useState([]);
+  //const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [sort, setSort] = useState("newest");
@@ -134,11 +134,7 @@ export default function StoreOrders() {
   }, [orders]); */
   }
 
-  useEffect(() => {
-    const storeOrders = getOrdersBySeller("store-001");
-    setOrders(storeOrders);
-    setLoading(false);
-  }, [orders]);
+  const orders = getOrdersBySeller("store-001");
 
   // counts per status — useMemo
   const statusCounts = useMemo(() => {

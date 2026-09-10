@@ -210,7 +210,7 @@ export const Dashboard = () => {
                     className="text-white my-3 my-sm-4 my-md-5 fw-bold"
                     style={{ letterSpacing: 1.3 }}
                   >
-                    &#8358; 284,500 .00
+                    ₦ 284,500 .00
                   </h3>
 
                   <span className="d-flex align-items-center gap-1 mb-4 mb-sm-5">
@@ -302,7 +302,7 @@ export const Dashboard = () => {
                           {" "}
                           <p style={{ lineHeight: 1 }}>unit sold:</p> <p>256</p>
                         </span>
-                        <p className=" fw-bold"> &#8358; 24,500.00</p>
+                        <p className=" fw-bold"> ₦ 24,500.00</p>
                       </div>
                     </div>
                   </div>
@@ -322,7 +322,7 @@ export const Dashboard = () => {
                     >
                       <h6 className="text-white"># ROA-102</h6>
                       <h6 className="text-white">James</h6>
-                      <h6 className="text-white"> &#8358; 8,000</h6>
+                      <h6 className="text-white"> ₦ 8,000</h6>
                       <div className="d-flex gap-1 align-items-center justify-content-center">
                         <FaCheck size={12} style={{ color: "#56d61b" }} />
                         <h6 className="text-white">paid</h6>

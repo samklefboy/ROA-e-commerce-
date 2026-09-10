@@ -7,6 +7,8 @@ import { TopUp, Withdraw } from "../pages/wallet/WalletPage";
 import { Transactions } from "../pages/wallet/transaction/Transactions";
 
 const ProfilePage = lazy(() => import("../pages/Profile/ProfilePage"));
+
+const CheckoutPage = lazy(() => import("../pages/Checkout/Checkout"));
 const Dashboard = lazy(() => import("../pages/Store/Dashboard/Dashboard"));
 const GetStore = lazy(() => import("../pages/createstore/GetStore"));
 const OrderPage = lazy(() => import("../pages/order/OrderPage"));
@@ -30,7 +32,10 @@ function AppRoutes() {
           <Route path="/orders" element={<OrderPage />} />
           <Route path="/shop" element={<ShoppingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/store/:storeId" element={<PublicStore />} />
+          <Route
+            /*path="/store/:storeId"*/ path="/public-store"
+            element={<PublicStore />}
+          />
           <Route path="/get-store" element={<GetStore />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -39,7 +44,9 @@ function AppRoutes() {
           <Route path="/settings" element={<MenuSettings />} />
           <Route path="/help_support" element={<Help_Support />} />
           <Route path="/withdraw" element={<Withdraw />} />
-          <Route path="/deposit" element={<TopUp />} />
+          <Route path="/wallet/topup" element={<TopUp />} />
+
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/add_product" element={<AddEditProduct />} />
           <Route

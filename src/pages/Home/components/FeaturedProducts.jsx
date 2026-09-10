@@ -1,7 +1,7 @@
 import { Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ProductPage from "../../../components/product/ProductPage";
-import products from "../../../js/products";
+import { PRODUCTS } from "../../../dummyData";
 
 export function FeaturedProducts() {
   return (
@@ -13,26 +13,25 @@ export function FeaturedProducts() {
           </h2>
         </div>
         <div>
-          <h5 className="text-start mt-5 mb-0">Trending products</h5>
+          <h5 className="text-start my-4">Trending products</h5>
 
           <ProductPage
             Store={false}
             filter={!true}
-            product={products}
+            product={PRODUCTS}
             count={false}
-            showWishlist={false}
           />
         </div>
 
         <Link to="/shopping">
           {" "}
           <Button
-            className="mt-5 border-0 p-3"
+            className="mt-4 border-0 p-3"
             style={{
               background: "#00e677",
             }}
           >
-            <h5 className="text-dark"> Show All Products</h5>
+            <p className="text-dark fs-5"> Show All Products</p>
           </Button>
         </Link>
       </div>

@@ -63,11 +63,11 @@ export default function ProductDrawer({ show, onHide, product, onClose }) {
 
               <div className="details-price">
                 <span className="new-price">
-                  &#8358;{(product.price * 10).toLocaleString()}
+                  ₦{(product.price * 10).toLocaleString()}
                 </span>
                 {product.oldPrice && (
                   <div>
-                    <div className="old-price">&#8358;{product.oldPrice}</div>
+                    <div className="old-price">₦{product.oldPrice}</div>
                     <div
                       style={{
                         color: "#00e676",

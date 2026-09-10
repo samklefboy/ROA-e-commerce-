@@ -1,11 +1,12 @@
-import { Card, CardBody, Row, Col } from "react-bootstrap";
-import { FaHeart, FaStore, FaShoppingCart } from "react-icons/fa";
+import { Card, CardBody } from "react-bootstrap";
+import { FaBath, FaBed, FaHeart, FaStore, FaStoreAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { PRODUCT_TYPE_CONFIG } from "./ProductPage";
+import { StarFill } from "react-bootstrap-icons";
 
 export default function ProductCard({
   product,
-  PRODUCT_TYPE_CONFIG,
-  IsWish,
+  wished,
   handleWishlist,
   handleAddToCart,
   showWishlist,
@@ -23,29 +24,80 @@ export default function ProductCard({
   const lowStock = product.stock < product.lowStock;
   const outOfStock = product.stock === 0;
 
+  const isNew =
+    product.createdAt &&
+    Date.now() - new Date(product.createdAt).getTime() < 7 * 86400000;
+
+  const isHot = (product.soldCount || 0) >= 20;
+
+  const isRegular = !product.type || product.type === "REGULAR";
+  const isRealEstate = product.type === "REAL_ESTATE";
+
   return (
     <Card className="product-card">
       <div style={{ position: "relative" }}>
         {/* Image area */}
-        {product.image?.[0] && (
-          <Card.Img src={product.image} alt={product.name} />
-        )}
-
-        {/* Discount badge */}
-        {Shop && discount && (
-          <small
-            className="fw-bold text-white p-1"
+        {product.images?.[0] ? (
+          <Card.Img src={product.images[0]} alt={product.name} loading="lazy" />
+        ) : (
+          <div
             style={{
-              position: "absolute",
-              top: 8,
-              left: 8,
-              background: "#c0392b",
-              borderRadius: 7,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            -{discount}%
-          </small>
+            <categoryConfig.Icon
+              style={{ fontSize: 40, color: "rgba(255,255,255,0.08)" }}
+            />
+          </div>
         )}
+
+        {/* Badges */}
+        <div style={{ position: "absolute", top: 8, left: 8 }}>
+          {Shop && discount && (
+            <>
+              {discount && (
+                <div
+                  className={` p-1 fw-bold text-white mb-2  ${isHot ? "d-none" : "d-inline-block"} `}
+                  style={{
+                    background: "#c0392b",
+                    borderRadius: 7,
+                  }}
+                >
+                  <small>-{discount}%</small>
+                </div>
+              )}
+              {isNew && !discount && (
+                <small
+                  className="fw-bold text-white p-1"
+                  style={{
+                    background: "#1D9E75",
+                    borderRadius: 7,
+                  }}
+                >
+                  NEW
+                </small>
+              )}
+              {isHot && (
+                <div>
+                  {" "}
+                  <small
+                    className="fw-bold text-dark py-1 px-2"
+                    style={{
+                      background: "#ccc929",
+                      borderRadius: 7,
+                    }}
+                  >
+                    🔥 HOT
+                  </small>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Out of stock  */}
         {(Shop && product.status === "OUT_OF_STOCK" && (
@@ -54,11 +106,10 @@ export default function ProductCard({
             style={{
               position: "absolute",
               inset: 0,
-              background: "rgba(0,0,0,0.6)",
             }}
           >
             <p
-              className="px-3 py-1"
+              className="px-3 py-1 "
               style={{
                 background: "#1a1a1a",
                 border: "0.5px solid #2a2a2a",
@@ -109,16 +160,22 @@ export default function ProductCard({
             style={{ position: "absolute", top: 8, right: 8 }}
           >
             <div
-              className={`p-2 ${IsWish ? "wishlist-active" : ""}`}
-              onClick={(e) => handleWishlist(e, product.id)}
+              clas
+              className={`d-flex align-items-center justify-content-center ${wished ? "wishlist-active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWishlist(product.id);
+              }}
               style={{
                 background: "rgba(22, 22, 22, 0.73)",
+                width: 28,
+                height: 28,
                 borderRadius: "50%",
                 cursor: "pointer",
                 color: "#fff",
               }}
             >
-              <FaHeart size={18} />
+              <FaHeart size={15} />
             </div>
           </div>
         )}
@@ -126,56 +183,50 @@ export default function ProductCard({
 
       <CardBody className="py-0">
         {/* Store + Category */}
-        <p
-          style={{
-            color: "#f9fd1b",
-            lineHeight: 1.4,
-          }}
-        >
-          {Shop && (
-            <>
-              <FaStore className="me-1" />
-              {product.store?.name || product.store}{" "}
-              <span className="mx-1 fw-bold">·</span>{" "}
-            </>
-          )}
-          {product.category}
-        </p>
+        {Shop && (
+          <span
+            style={{
+              display: " -webkit-box",
+              WebkitLineClamp: 1,
+              webBoxOrient: "vertical",
+              color: "#c6c92d",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <FaStoreAlt className="me-2" /> {product.store?.name}
+          </span>
+        )}
 
         {/* Name */}
         <div className="my-2 product-name">{product.name}</div>
 
-        {/* Rating */}
-        {Shop && (
-          <div className="meta align-items-center">
-            <img
-              className="ratings-image"
-              src={`/ratings/rating-${product.rating.stars * 10}.png`}
-              alt=""
-            />
-            <span>{product.rating.count.toLocaleString()}</span>
+        {/* Rating — regular only */}
+        {Shop && isRegular && product.ratingCount > 0 && (
+          <div
+            className="my-2"
+            style={{ display: "flex", alignItems: "center", gap: 3 }}
+          >
+            {[1, 2, 3, 4, 5].map((s) =>
+              s <= Math.round(product.ratingStars) ? (
+                <StarFill key={s} style={{ fontSize: 10, color: "#f3f70b" }} />
+              ) : (
+                <Star key={s} style={{ fontSize: 10 }} />
+              ),
+            )}
+            <p className="ms-1">({product.ratingCount})</p>
           </div>
         )}
 
         {/* CAR specs */}
         {Shop && product.type === "VEHICLE" && product.listingMeta && (
-          <div className="d-flex gap-4 mb-3 flex-wrap align-items-center">
-            {[
-              product.listingMeta.year,
-              product.listingMeta.transmission,
-              product.listingMeta.fuel,
-            ]
+          <div className="d-flex flex-column gap-3 my-3">
+            {[product.listingMeta.year, product.listingMeta.transmission]
               .filter(Boolean)
               .map((spec) => {
                 return (
-                  <p
-                    className="px-2 py-1 text-dark"
-                    key={spec}
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      borderRadius: "10px",
-                    }}
-                  >
+                  <p className="fs-5" key={spec}>
                     {spec}
                   </p>
                 );
@@ -185,54 +236,53 @@ export default function ProductCard({
 
         {/* REAL ESTATE specs preview */}
         {Shop && product.type === "REAL_ESTATE" && product.listingMeta && (
-          <div className="d-flex mb-3 gap-4">
+          <div className="d-flex flex-column gap-3 my-3">
             {product.listingMeta.bedrooms && (
-              <p>🛏 {product.listingMeta.bedrooms}</p>
+              <div className="d-flex align-items-center gap-2">
+                <FaBed className="text-white" />{" "}
+                <p className="fs-5"> {product.listingMeta.bedrooms}</p>
+              </div>
             )}
             {product.listingMeta.bathrooms && (
-              <p>🚿 {product.listingMeta.bathrooms}</p>
-            )}
-            {product.listingMeta.listingType && (
-              <p
-                className="px-2 "
-                style={{
-                  borderRadius: 20,
-                  background: "rgba(27,27,143,0.3)",
-                  color: "#aaf",
-                }}
-              >
-                {product.listingMeta.listingType}
-              </p>
+              <div className="d-flex align-items-center gap-2">
+                <FaBath className="text-white" />{" "}
+                <p className="fs-5">
+                  {" "}
+                  {product.listingMeta.bathrooms} bathroom
+                  {product.listingMeta.bathrooms !== 1 ? "s" : ""}
+                </p>
+              </div>
             )}
           </div>
         )}
 
         {/* Price */}
-        <div
-          className="d-flex flex-wrap align-items-center mt-3 mb-4 gap-2 gap-md-3 flex-wrap "
-          style={{ overflow: "hidden", lineHeight: 1 }}
-        >
-          <div className="price">&#8358; {product.price.toLocaleString()}</div>
-          {Shop && product.oldPrice && (
-            <small className="old-price " style={{ color: "#b4b4b4b0" }}>
-              &#8358; {product.oldPrice.toLocaleString()}
-            </small>
-          )}
+        <div>
+          <div className="price">
+            ₦{product.price.toLocaleString()}{" "}
+            {isRealEstate &&
+              product.listingMeta?.listingType === "For rent" && <>/yr</>}
+          </div>
 
-          {Shop && product.type === "CAR" && product.listingMeta.negotiable && (
-            <span
-              className="my-2"
-              style={{
-                fontSize: 10,
-                color: "#1D9E75",
-                background: "rgba(29,158,117,0.1)",
-                borderRadius: 5,
-                padding: "2px 7px",
-              }}
-            >
-              Negotiable
-            </span>
-          )}
+          {Shop &&
+            product.type === "VEHICLE" &&
+            product.listingMeta.negotiable && (
+              <span
+                className="my-2"
+                style={{
+                  position: "absolute",
+                  top: 240,
+                  left: 0,
+                  fontSize: 11,
+                  color: "#d1e2dd",
+                  background: "rgb(29, 158, 117)",
+                  borderRadius: 5,
+                  padding: "2px 7px",
+                }}
+              >
+                Negotiable
+              </span>
+            )}
         </div>
 
         {/* stock and status */}
@@ -258,9 +308,9 @@ export default function ProductCard({
         {/* CTA */}
         {(Shop && (
           <button
-            onClick={(e) => handleAddToCart(e, product)}
+            onClick={() => handleAddToCart(product)}
             disabled={product.status === "OUT_OF_STOCK"}
-            className=" py-1   mx-auto my-4 d-flex w-100 justify-content-center"
+            className=" py-1 text-center my-3 d-flex w-100 justify-content-center"
             style={{
               border: `1px solid ${product.status === "OUT_OF_STOCK" ? "#2a2a2a" : productTypeConfig.ctaColor}`,
               background:
@@ -300,6 +350,8 @@ export default function ProductCard({
               ].map((cta) => {
                 return !lowStock ? (
                   <button
+                    type="button"
+                    key={cta.a}
                     className=" py-1  mx-auto my-4 d-flex w-100 justify-content-center "
                     style={{
                       background: cta.bg,
@@ -313,6 +365,7 @@ export default function ProductCard({
                 ) : (
                   <button
                     type="button"
+                    key={cta.a}
                     onClick={() => navigate(cta.nav)}
                     className=" py-1  mx-auto my-4 d-flex w-100 justify-content-center "
                     style={{

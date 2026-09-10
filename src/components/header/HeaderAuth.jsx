@@ -53,7 +53,7 @@ const HeaderAuth = () => {
             {view ? (
               <h6 className="text-white">***</h6>
             ) : (
-              <p className="text-white text-wrap">&#8358; </p>
+              <p className="text-white text-wrap">₦ </p>
             )}
 
             <div
@@ -123,13 +123,13 @@ const HeaderAuth = () => {
                   className="fs-1 fw-bolder text-white"
                   style={{ letterSpacing: 4 }}
                 >
-                  &#8358; 122,537. <span style={{ fontSize: "17px" }}>24</span>
+                  ₦ 122,537. <span style={{ fontSize: "17px" }}>24</span>
                 </h1>
               )}
             </div>
 
             <Stack direction="horizontal" gap={3} className="my-3">
-              <Link to="/deposit" className="w-100">
+              <Link to="/wallet/topup" className="w-100">
                 <button
                   className="text-light text-center  p-2  w-100"
                   style={{

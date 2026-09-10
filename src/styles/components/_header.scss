@@ -26,11 +26,10 @@
 }
 
 .header-scrolled {
-  // background: rgba(8, 73, 13, 0.692);
-  background: rgba(10, 26, 10, 0.97) !important;
+  // background: rgba(8, 73, 13, 0.692) !important;
+  background: rgba(10, 26, 10, 0.8) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-bottom: 0.5px solid #1a2a1a;
 }
 
 .header-icons {
@@ -50,8 +49,7 @@
 .header {
   top: 0 !important;
   z-index: 300;
-  transition: all 0.6s ease;
-  color: #000;
+  transition: background 0.6s ease-in-out;
   margin: 0 !important;
   background: transparent;
   border: none !important;
@@ -92,7 +90,7 @@
       &::placeholder {
         font-size: 13px;
         letter-spacing: 1px;
-        color: #b4b4b4b0;
+        color: #a0a0a0;
       }
     }
   }
@@ -200,7 +198,7 @@
     border-bottom: none;
     border-top-left-radius: 30px;
     border-top-right-radius: 30px;
-    color: #b4b4b4b0 !important;
+    color: #a0a0a0 !important;
   }
 
   .profile-pic-wrapper {

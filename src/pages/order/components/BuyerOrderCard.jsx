@@ -1,5 +1,6 @@
 // ---- BUYER ORDER CARD ----
 
+import { Star } from "react-bootstrap-icons";
 import { FaShoppingBag, FaStore } from "react-icons/fa";
 import { FiMapPin } from "react-icons/fi";
 
@@ -287,7 +288,57 @@ export function BuyerOrderCard({ order }) {
                 fontFamily: "'Plus Jakarta Sans',sans-serif",
               }}
             >
-              Delivered
+              <Star className="mb-1" style={{ fontSize: 13 }} />
+              Rate store
+            </button>
+          )}
+
+          {/* Buy again — delivered */}
+          {isDelivered && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/product/${order.items?.[0]?.productId}`);
+              }}
+              style={{
+                flex: 1,
+                padding: "9px 0",
+                background: "#c1c94c1a",
+                border: "0.5px solid #c1c94c63",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#c1c94c",
+                cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+              }}
+            >
+              Buy again
+            </button>
+          )}
+
+          {/* Cancelled info */}
+          {isCancelled && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/orders/${order.id}`);
+              }}
+              style={{
+                flex: 1,
+                padding: "9px 0",
+                background: "rgba(192,57,43,0.06)",
+                border: "0.5px solid rgba(192,57,43,0.2)",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#c0392b",
+                cursor: "pointer",
+              }}
+            >
+              View details
             </button>
           )}
         </div>

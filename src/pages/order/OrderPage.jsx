@@ -1,10 +1,8 @@
 import {
   Container,
-  Image,
   Row,
   Col,
   Offcanvas,
-  Modal,
   Form,
   FormCheck,
 } from "react-bootstrap";
@@ -64,8 +62,8 @@ const FILTER_TABS = [
 
 function OrderPage() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [orders, setOrders] = useState([]);
+  // const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("ALL");
   const [sort, setSort] = useState("newest");
   const [sortLabel, setSortLabel] = useState("Newest first");
@@ -100,17 +98,7 @@ function OrderPage() {
   }, [orders]);
  */
   }
-
-  useEffect(() => {
-    // development — use dummy data
-    const myOrders = getOrdersByBuyer("user-001");
-    setOrders(myOrders);
-    setLoading(false);
-
-    // production — use real API
-    // const { data } = await axios.get("/api/buyer/orders");
-    // setOrders(data);
-  }, [orders]);
+  const orders = getOrdersByBuyer("user-001");
 
   // counts per status — useMemo
   const statusCounts = useMemo(() => {
@@ -541,6 +529,9 @@ function OrderPage() {
           order={selectedOrder}
           loading={loading}
           handleCancel={handleCancel}
+          cancelModal={cancelModal}
+          cancelLoad={cancelLoad}
+          setCancelModal={setCancelModal}
         />
       </Container>
 
@@ -552,3 +543,367 @@ function OrderPage() {
 }
 
 export default OrderPage;
+
+
+
+
+
+
+
+
+
+// pages/wallet/TransactionsPage.jsx
+// ============================================================
+// FULL TRANSACTIONS PAGE
+// Filter by type + date range + search
+// Summary — money in / money out / balance
+// All API endpoints documented
+// Dummy data for development
+// ============================================================
+
+import {
+  useState, useEffect, useMemo,
+  useCallback, useRef,
+} from "react";
+import { useNavigate }             from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  TRANSACTIONS,
+  WALLET_SUMMARY,
+} from "../../js/dummyData";
+
+
+
+
+
+// ============================================================
+// TRANSACTION DETAIL BOTTOM SHEET
+// ============================================================
+function TransactionDetailSheet({ txn, onClose }) {
+  if (!txn) return null;
+
+  const cfg    = TYPE_CONFIG[txn.type]   || TYPE_CONFIG.PURCHASE;
+  const status = STATUS_CONFIG[txn.status] || STATUS_CONFIG.COMPLETED;
+  const isCredit = cfg.isCredit && txn.status !== "FAILED";
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{
+          position:   "fixed",
+          inset:      0,
+          background: "rgba(0,0,0,0.7)",
+          zIndex:     200,
+          display:    "flex",
+          alignItems: "flex-end",
+        }}
+      >
+        <motion.div
+          initial={{ y: 400 }}
+          animate={{ y: 0 }}
+          exit={{ y: 400 }}
+          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background:   "#111a11",
+            borderRadius: "20px 20px 0 0",
+            width:        "100%",
+            maxWidth:     480,
+            margin:       "0 auto",
+            padding:      "0 0 32px",
+          }}
+        >
+          {/* Drag handle */}
+          <div style={{ width: 36, height: 4, background: "#1a2a1a", borderRadius: 2, margin: "12px auto 0" }} />
+
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "0.5px solid #1a2a1a" }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: "#eee" }}>
+              Transaction details
+            </span>
+            <div
+              onClick={onClose}
+              style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
+              <i className="ti ti-x" style={{ fontSize: 14, color: "#888" }} />
+            </div>
+          </div>
+
+          <div style={{ padding: "20px 20px 0" }}>
+
+            {/* Amount — hero */}
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: cfg.bg, border: `2px solid ${cfg.color}44`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <i className={`ti ${cfg.icon}`} style={{ fontSize: 26, color: cfg.color }} />
+              </div>
+              <p style={{ fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 800, color: isCredit ? "#1D9E75" : txn.status === "FAILED" ? "#888" : "#c0392b", margin: 0 }}>
+                {isCredit ? "+" : txn.status !== "FAILED" ? "-" : ""}₦{txn.amount?.toLocaleString()}
+              </p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "4px 0 8px" }}>
+                {cfg.label}
+              </p>
+              <span style={{ fontSize: 11, fontWeight: 600, color: status.color, background: status.bg, borderRadius: 20, padding: "3px 12px" }}>
+                {status.label}
+              </span>
+            </div>
+
+            {/* Details table */}
+            <div style={{ background: "#0a1a0a", border: "0.5px solid #1a2a1a", borderRadius: 12, overflow: "hidden" }}>
+              {[
+                { label: "Description", val: txn.title       },
+                { label: "Details",     val: txn.description },
+                { label: "Date",        val: new Date(txn.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) },
+                { label: "Time",        val: formatTime(txn.createdAt) },
+                { label: "Reference",   val: txn.reference, mono: true  },
+                { label: "Type",        val: cfg.label       },
+              ].filter(r => r.val).map((row, i) => (
+                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "11px 14px", borderTop: i > 0 ? "0.5px solid #1a2a1a" : "none", gap: 12 }}>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
+                    {row.label}
+                  </span>
+                  <span style={{ fontSize: 12, color: "#ddd", fontWeight: 500, textAlign: "right", fontFamily: row.mono ? "monospace" : "inherit", wordBreak: "break-all" }}>
+                    {row.val}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Copy reference */}
+            {txn.reference && (
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(txn.reference)}
+                style={{ width: "100%", padding: "11px 0", marginTop: 12, background: "transparent", border: "0.5px solid rgba(201,168,76,0.25)", borderRadius: 10, fontSize: 12, color: "#c9a84c", cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              >
+                <i className="ti ti-copy" style={{ fontSize: 14 }} />
+                Copy reference number
+              </button>
+            )}
+
+            {/* Link to related order if applicable */}
+            {txn.metadata?.orderId && (
+              <button
+                type="button"
+                onClick={() => {}}
+                style={{ width: "100%", padding: "11px 0", marginTop: 8, background: "rgba(29,158,117,0.08)", border: "0.5px solid rgba(29,158,117,0.2)", borderRadius: 10, fontSize: 12, color: "#1D9E75", cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              >
+                <i className="ti ti-shopping-bag" style={{ fontSize: 14 }} />
+                View related order
+              </button>
+            )}
+
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
+export default function TransactionsPage() {
+ 
+  return (
+    <div style={{ background: "#0a1a0a", minHeight: "100vh", paddingBottom: 100 }}>
+
+      {/* ================================================================
+          TOPBAR
+      ================================================================ */}
+      <div style={{
+        position:             "sticky",
+        top:                  0,
+        zIndex:               30,
+        background:           "rgba(10,26,10,0.97)",
+        backdropFilter:       "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderBottom:         "0.5px solid #1a2a1a",
+        padding:              "12px 16px",
+        display:              "flex",
+        alignItems:           "center",
+        justifyContent:       "space-between",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            onClick={() => navigate(-1)}
+            style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          >
+            <i className="ti ti-arrow-left" style={{ fontSize: 15, color: "#888" }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0 }}>Wallet</p>
+            <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 700, color: "#eee", margin: 0 }}>
+              Transactions
+            </h1>
+          </div>
+        </div>
+
+       
+      </div>
+
+     
+
+
+     
+
+      {/* ================================================================
+          TRANSACTION LIST
+      ================================================================ */}
+      <div style={{ padding: "0 16px" }}>
+
+        {/* Loading skeletons */}
+        {loading && (
+        
+        )}
+
+        {/* Empty state */}
+        
+
+        {/* Grouped transactions */}
+        {!loading && grouped.map(([dateLabel, txns]) => (
+          <div key={dateLabel}>
+
+            {/* Date group header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 0 8px" }}>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: 1.5, textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>
+                {dateLabel}
+              </p>
+              <div style={{ flex: 1, height: "0.5px", background: "#1a2a1a" }} />
+              {/* Daily summary */}
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                {(() => {
+                  const dayIn  = txns.filter(t => TYPE_CONFIG[t.type]?.isCredit && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
+                  const dayOut = txns.filter(t => !TYPE_CONFIG[t.type]?.isCredit && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
+                  return (
+                    <>
+                      {dayIn  > 0 && <span style={{ fontSize: 10, color: "#1D9E75", fontWeight: 600 }}>+₦{dayIn.toLocaleString()}</span>}
+                      {dayOut > 0 && <span style={{ fontSize: 10, color: "#c0392b", fontWeight: 600 }}>-₦{dayOut.toLocaleString()}</span>}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Transactions in this date group */}
+            <motion.div variants={container} initial="hidden" animate="show">
+              {txns.map(txn => {
+                const cfg       = TYPE_CONFIG[txn.type]     || TYPE_CONFIG.PURCHASE;
+                const statusCfg = STATUS_CONFIG[txn.status] || STATUS_CONFIG.COMPLETED;
+                const isFailed  = txn.status === "FAILED";
+                const isCredit  = cfg.isCredit && !isFailed;
+
+                return (
+                  <motion.div
+                    key={txn.id}
+                    variants={cardAnim}
+                    onClick={() => setSelectedTxn(txn)}
+                    style={{
+                      display:    "flex",
+                      alignItems: "center",
+                      gap:        12,
+                      padding:    "12px 0",
+                      
+                    }}
+                  >
+                    {/* Type icon */}
+                    <div style={{}}>
+                      <i className={`ti ${isFailed ? "ti-alert-circle" : cfg.icon}`}
+                         style={{ fontSize: 18, color: isFailed ? "#666" : cfg.color }} />
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, color: isFailed ? "rgba(255,255,255,0.35)" : "#ddd", fontWeight: 500, margin: 0, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {txn.title}
+                      </p>
+                      <p >
+                        {txn.description}
+                      </p>
+                    
+                    </div>
+
+                    {/* Amount + chevron */}
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <p style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: isFailed ? "#555" : isCredit ? "#1D9E75" : "#c0392b", margin: 0 }}>
+                        {isFailed ? "" : isCredit ? "+" : "-"}₦{txn.amount?.toLocaleString()}
+                      </p>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 3 }}>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
+                          {cfg.label}
+                        </span>
+                        <i className="ti ti-chevron-right" style={{ fontSize: 11, color: "rgba(255,255,255,0.15)" }} />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </div>
+        ))}
+
+       
+
+      </div>
+
+      {/* ================================================================
+          SORT BOTTOM SHEET
+      ================================================================ */}
+      <AnimatePresence>
+        {sortOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setSortOpen(false)}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" }}
+          >
+            <motion.div
+              initial={{ y: 250 }} animate={{ y: 0 }} exit={{ y: 250 }}
+              transition={{ type: "spring", damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#111a11", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, margin: "0 auto", paddingBottom: 24 }}
+            >
+              <div style={{ width: 36, height: 4, background: "#1a2a1a", borderRadius: 2, margin: "12px auto 4px" }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 20px 14px", borderBottom: "0.5px solid #1a2a1a" }}>
+                <span style={{ fontSize: 15, fontWeight: 600, color: "#eee" }}>Sort by</span>
+                <button type="button" onClick={() => setSortOpen(false)} style={{ width: 28, height: 28, borderRadius: "50%", background: "#1a2a1a", border: "none", color: "#aaa", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <i className="ti ti-x" style={{ fontSize: 14 }} />
+                </button>
+              </div>
+              {SORT_OPTIONS.map(opt => (
+                <div
+                  key={opt.key}
+                  onClick={() => { setSort(opt.key); setSortOpen(false); }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", cursor: "pointer", background: sort === opt.key ? "#1f1a0e" : "transparent", borderBottom: "0.5px solid #1a2a1a" }}
+                >
+                  <span style={{ fontSize: 14, color: sort === opt.key ? "#c9a84c" : "#ccc", fontWeight: sort === opt.key ? 600 : 400 }}>
+                    {opt.label}
+                  </span>
+                  {sort === opt.key && <i className="ti ti-check" style={{ fontSize: 16, color: "#c9a84c" }} />}
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================================================================
+          DATE FILTER BOTTOM SHEET
+      ================================================================ */}
+    
+
+      {/* ================================================================
+          TRANSACTION DETAIL SHEET
+      ================================================================ */}
+      {selectedTxn && (
+        <TransactionDetailSheet
+          txn={selectedTxn}
+          onClose={() => setSelectedTxn(null)}
+        />
+      )}
+
+    </div>
+  );
+}

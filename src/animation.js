@@ -17,11 +17,11 @@ export const fadedown = {
 };
 
 export const zoomIn = {
-  hidden: { opacity: 0, scale: 0.7 },
+  hidden: { opacity: 0, scale: 0.9 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 1.1, ease: "easeInOut" },
+    transition: { duration: 1, ease: "easeInOut" },
   },
 };
 

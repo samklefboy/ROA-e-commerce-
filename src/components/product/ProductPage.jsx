@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
-import { Container } from "react-bootstrap";
 import ProductFilter from "./ProductFilter";
-import ProductGrid from "./ProductGrid";
 import ProductDetails from "./ProductDetails";
-import ProductDrawer from "./ProductDrawer";
+import axios from "axios";
+import ProductGroupAccordion from "./ProductGroupAccordion";
+import { useNavigate } from "react-router-dom";
 import {
   FaCouch,
   FaFootballBall,
@@ -14,42 +14,68 @@ import {
   FaTools,
   FaUtensils,
 } from "react-icons/fa";
-import { Book, Building, CarFront, Leaf } from "react-bootstrap-icons";
+import { Book, Building, CarFront, Grid, Leaf } from "react-bootstrap-icons";
+
+// ---- CONFIGS ----
+export const CATEGORY_CONFIG = {
+  All: { Icon: Grid, color: "#c9a84c" },
+  Fashion: { Icon: FaShirtsinbulk, color: "#c9a84c" },
+  Electronics: { Icon: FaMobile, color: "#378ADD" },
+  Agriculture: { Icon: Leaf, color: "#1D9E75" },
+  "Auto parts": { Icon: FaTools, color: "#888" },
+  Beauty: { Icon: FaHandSparkles, color: "#D4537E" },
+  "Food & kitchen": { Icon: FaUtensils, color: "#c9a84c" },
+  Shoes: { Icon: FaShoePrints, color: "#378ADD" },
+  "Home & living": { Icon: FaCouch, color: "#1D9E75" },
+  Sports: { Icon: FaFootballBall, color: "#888" },
+  Health: { Icon: Leaf, color: "#D4537E" },
+  Books: { Icon: Book, color: "#c9a84c" },
+  Cars: { Icon: CarFront, color: "#378ADD" },
+  "Real estate": { Icon: Building, color: "#1D9E75" },
+};
 
 // config per product TYPE
-const PRODUCT_TYPE_CONFIG = {
+export const PRODUCT_TYPE_CONFIG = {
   REGULAR: {
     cta: "Add to cart",
     ctaColor: "#ecf01f",
-    ctaBg: "#202001e8",
+    ctaBg: "#202001c2",
     ctaText: "#fbff00",
-    showStock: true,
     showSpecs: false,
+    showAmenities: false,
+    showVariants: true,
+    showMap: false,
   },
-  CAR: {
+
+  VEHICLE: {
     cta: "Contact seller",
-    ctaColor: "#29f7b6",
-    ctaBg: "transparent",
-    ctaText: "#00ffae",
-    showStock: false,
-    showSpecs: true, // shows km, transmission etc
+    ctaColor: "none",
+    ctaBg: "linear-gradient(135deg, #1a4a1a, #2d7a0a)",
+    ctaText: "#fff",
+    showSpecs: true,
+    showAmenities: false,
+    showVariants: false,
+    showMap: true,
   },
   REAL_ESTATE: {
-    cta: "Schedule visit",
-    ctaColor: "#6df84a",
-    ctaBg: "transparent",
-    ctaText: "#33fd00",
-    showStock: false,
-    showSpecs: true, // shows beds, baths etc
+    cta: "Schedule visit ",
+    ctaColor: "0.5px solid rgba(55,138,221,0.3)",
+    ctaBg: "rgba(55,138,221,0.12",
+    ctaText: "#378ADD",
+    showSpecs: true,
+    showAmenities: true,
+    showVariants: false,
+    showMap: true,
   },
 };
-// config per CATEGORY — controls Icon and color
 
+// config per CATEGORY — controls Icon and color
 const SORT_CONFIG = {
   "Newest first": (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-  "Oldest first": (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+  "Most popular": (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
   "Price: low to high": (a, b) => a.price - b.price,
   "Price: high to low": (a, b) => b.price - a.price,
+  "Most sold": (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
 };
 
 export default function ProductPage({
@@ -58,64 +84,61 @@ export default function ProductPage({
   count = true,
   Store = true,
   Shop = true,
+  storeFront = true,
   showWishlist = true,
-  showBtn = true,
+  loading,
+  activeFilterCount,
+  clearFilters,
+  loadingMore,
+  observerRef,
+  hasMore,
+  sort,
+  setSort,
+  CATEGORIES,
+  selectedCategory,
+  setSelectedCategory,
 }) {
-  // const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [search, setSearch] = useState("");
-  const [showDrawer, setShowDrawer] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sort, setSort] = useState("Newest first");
-  const [IsWish, setIsWish] = useState("");
+  const [isWish, setIsWish] = useState({});
 
-  const selectProduct = (product) => {
+  // handle product click
+  const selectProduct = useCallback((product) => {
     setSelectedProduct(product);
     setShowDetails(true);
+  }, []);
 
-    if (window.innerWidth < 750) {
-      setShowDrawer(true);
-      setShowDetails(false);
-    }
-  };
+  const handleDetailClose = useCallback(() => {
+    setShowDetails(false);
+
+    setTimeout(() => setSelectedProduct(null), 350);
+  }, []);
 
   // filtering by category and search
   const filtered = useMemo(() => {
     return product.filter((p) => {
       const matchCategory =
         selectedCategory === "All" || p.category === selectedCategory;
-      const matchSearch = search
-        ? p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.keywords?.some((k) =>
-            k.toLowerCase().includes(search.toLowerCase()),
-          )
-        : true;
-      return matchCategory && matchSearch;
+
+      return matchCategory;
     });
-  }, [product, search, selectedCategory]);
+  }, [product, selectedCategory]);
 
   // sorting filtered results
   const sorted = useMemo(() => {
     return [...filtered].sort(SORT_CONFIG[sort]);
   }, [filtered, sort]);
 
-  // handle add to cart — useCallback
-  const handleAddToCart = useCallback((e, product) => {
-    e.stopPropagation();
-    console.log("Add to cart:", product.id);
+  // wishlist toggle — useCallback
+  const handleWishlist = useCallback(async (productId) => {
+    setIsWish((prev) => ({ ...prev, [productId]: !prev[productId] }));
+    try {
+      await axios.post("/api/wishlist/toggle", { productId });
+    } catch {
+      setIsWish((prev) => ({ ...prev, [productId]: !prev[productId] }));
+    }
   }, []);
-
-  // handle wishlist — useCallback
-  const handleWishlist = useCallback((e, product) => {
-    e.stopPropagation();
-    setIsWish((p) => !p);
-    console.log("Toggle wishlist:", product);
-  }, []);
-
-  const category = ["All", ...new Set(product.flatMap((p) => p.category))];
-
-  const STORE_FILTER = ["All", "Active", "Out of stock"];
 
   return (
     <>
@@ -125,56 +148,47 @@ export default function ProductPage({
           <ProductFilter
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
-            category={category}
             setSort={setSort}
             sort={sort}
-            STORE_FILTER={STORE_FILTER}
-            Shop={Shop}
             Store={Store}
+            Shop={Shop}
+            CATEGORIES={CATEGORIES}
+            storeFront={storeFront}
           />
         )}
 
-        {/* Results count */}
-        {count && (
-          <div className="py-3 py-lg-5 d-flex align-items-center gap-4">
-            <h6>
-              {sorted.length} product{sorted.length !== 1 ? "s" : ""}
-            </h6>
-          </div>
-        )}
-
         {/* GRID */}
-        <ProductGrid
+        <ProductGroupAccordion
           selectProduct={selectProduct}
           sorted={sorted}
-          IsWish={IsWish}
-          handleAddToCart={handleAddToCart}
+          wished={isWish}
           handleWishlist={handleWishlist}
-          PRODUCT_TYPE_CONFIG={PRODUCT_TYPE_CONFIG}
           showWishlist={showWishlist}
-          showBtn={showBtn}
           Store={Store}
           Shop={Shop}
+          count={count}
+          loading={loading}
+          activeFilterCount={activeFilterCount}
+          clearFilters={clearFilters}
+          loadingMore={loadingMore}
+          observerRef={observerRef}
+          hasMore={hasMore}
+          selectedCategory={selectedCategory}
+          storeFront={storeFront}
         />
 
         {/* DETAILS (desktop animated switching) */}
 
-        <ProductDetails
-          show={showDetails}
-          onHide={() => {
-            setShowDetails(false);
-          }}
-          onClose={() => setSelectedProduct(null)}
-          product={selectedProduct}
-        />
-
-        {/* MOBILE DRAWER (drag enabled) */}
-        <ProductDrawer
-          show={showDrawer}
-          onHide={() => setShowDrawer(false)}
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
+        {showDetails && (
+          <ProductDetails
+            show={showDetails}
+            product={selectedProduct}
+            onClose={handleDetailClose}
+            onWishlist={handleWishlist}
+            wished={!!isWish[selectedProduct?.id]}
+            navigate={navigate}
+          />
+        )}
       </div>
     </>
   );

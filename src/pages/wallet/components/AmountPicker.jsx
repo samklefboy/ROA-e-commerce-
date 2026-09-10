@@ -26,7 +26,7 @@ export function AmountPicker({
                 background: amount == a ? "#ffffff23 " : "",
               }}
             >
-              {a === "All" ? a : <>&#8358; {a.toLocaleString()}</>}
+              {a === "All" ? a : <>₦ {a.toLocaleString()}</>}
             </button>
           );
         })}

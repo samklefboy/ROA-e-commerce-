@@ -15,7 +15,7 @@ export function WalletCard({ topup = true, withdraw = true }) {
           className="fs-1 fw-bolder text-white my-4"
           style={{ letterSpacing: 4 }}
         >
-          &#8358; 122,420 <span style={{ fontSize: "17px" }}>.31</span>
+          ₦ 122,420 <span style={{ fontSize: "17px" }}>.31</span>
         </h1>
         {topup && <p>Last topped up 3 days ago</p>}
         {withdraw && <p>Withdrawals process within 24 hours</p>}

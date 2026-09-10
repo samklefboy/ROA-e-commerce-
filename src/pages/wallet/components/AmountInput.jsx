@@ -17,7 +17,7 @@ export function AmountInput({
           className="d-flex gap-3 align-items-center p-4"
           style={{ background: "#101606a4" }}
         >
-          <h2 style={{ color: "#facc15" }}> &#8358;</h2>
+          <h2 style={{ color: "#facc15" }}> ₦</h2>
           <Form.Control
             className="py-3"
             style={{ letterSpacing: 2 }}

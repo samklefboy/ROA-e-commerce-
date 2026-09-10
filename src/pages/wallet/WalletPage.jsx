@@ -98,15 +98,12 @@ export function TopUp() {
         >
           <div className="d-flex justify-content-between align-itens-center">
             <h6>Amount</h6>
-            <h5 className="text-white">
-              {" "}
-              &#8358; {numAmount.toLocaleString()}.00
-            </h5>
+            <h5 className="text-white"> ₦ {numAmount.toLocaleString()}.00</h5>
           </div>
 
           <div className="d-flex justify-content-between align-itens-center my-5">
             <h6>Processing fee</h6>
-            <h5 className="text-white"> &#8358; 0.00</h5>
+            <h5 className="text-white"> ₦ 0.00</h5>
           </div>
 
           <div style={{ border: "0.5px solid #ffffff65" }} />
@@ -115,7 +112,7 @@ export function TopUp() {
             <h6>You will receive</h6>
             <h5 style={{ color: "#ffee00" }}>
               {" "}
-              &#8358; {numAmount.toLocaleString()}.00
+              ₦ {numAmount.toLocaleString()}.00
             </h5>
           </div>
         </div>
@@ -251,15 +248,12 @@ export function Withdraw() {
         >
           <div className="d-flex justify-content-between align-itens-center">
             <h6>Withdrawal amount</h6>
-            <h5 className="text-white">
-              {" "}
-              &#8358; {numAmount.toLocaleString()}.00
-            </h5>
+            <h5 className="text-white"> ₦ {numAmount.toLocaleString()}.00</h5>
           </div>
 
           <div className="d-flex justify-content-between align-itens-center my-5">
             <h6>Withdrawal fee</h6>
-            <h5 className="text-white"> &#8358; {fee}.00</h5>
+            <h5 className="text-white"> ₦ {fee}.00</h5>
           </div>
 
           <div style={{ border: "0.5px solid #ffffff65" }} />
@@ -267,7 +261,7 @@ export function Withdraw() {
           <div className="d-flex mt-4">
             <h5 className="ms-auto" style={{ color: "#ffee00" }}>
               {" "}
-              &#8358; {receive.toLocaleString()}.00
+              ₦ {receive.toLocaleString()}.00
             </h5>
           </div>
         </div>
@@ -288,7 +282,7 @@ export function Withdraw() {
 
             <h6>
               Withdrawal are processed within 24n hours on business days.
-              minimum withdrawal is &#8358; 1,000
+              minimum withdrawal is ₦ 1,000
             </h6>
           </Stack>
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Image, Nav, Stack } from "react-bootstrap";
+import { Container, Image, Nav, Stack } from "react-bootstrap";
 import { Link } from "react-router-dom";
 // import WhatsAppFloat from "./WhatsappFloat";
 import ProductPage from "../../components/product/ProductPage.jsx";
@@ -28,50 +28,31 @@ import {
   TwitterX,
 } from "react-bootstrap-icons";
 
-const STORE_STATS = [
-  { value: `${STORES.totalProducts}`, label: "Products" },
-  { value: `${STORES.followers}`, label: "Followers" },
-  { value: `${STORES.delivery}`, label: "Delivery" },
-];
+const STORES = getStoreById("store-001");
 
-const STORE_POLICIES = [
-  {
+const STORE_POLICIES = {
+  Delivery: {
     Icon: FaBus,
     color: "#e0ee19",
-    tag: "Delivery",
-    value: `${STORES.shipping}`,
   },
-  {
+  Returns: {
     Icon: FiLoader,
-    tag: "Returns",
     color: "#1927ee",
-    value: `${STORES.returns}`,
   },
-  {
+  Warranty: {
     Icon: Shield,
     color: "#ee19ee",
-    tag: "Warranty",
-    value: `${STORES.warranty}`,
   },
-  {
-    Icon: FaMoneyBill,
-    color: "#19eec0",
-    tag: "Payment",
-    value: `${STORES.payment}`,
-  },
-  {
+
+  Support: {
     Icon: FiHeadphones,
     color: "#19ee35",
-    tag: "Support",
-    value: `${STORES.support}`,
   },
-  {
+  Location: {
     Icon: FaLocationArrow,
     color: "#c0ee19",
-    tag: "Location",
-    value: `${STORES.location}`,
   },
-];
+};
 
 const STORE_CONTACT = [
   {
@@ -90,27 +71,46 @@ const STORE_CONTACT = [
   },
   {
     Icon: Instagram,
-    color: "#ee193c",
-    bg: "#ee193c2d",
-    tag: "instagram",
-    value: `${STORES.instagram}`,
+    color: "#ff9baa",
+    bg: "#c21919e0",
+    tag: "Instagram",
+    value: `${STORES.socialLinks.instagram}`,
   },
   {
     Icon: TwitterX,
-    color: "#ee193c",
-    bg: "#ee193c2d",
-    tag: "Twitter / X",
-    value: `${STORES.twitterX}`,
+    color: "#ffffff",
+    bg: "#0f0f0fcc",
+    tag: "TwitterX",
+    value: `${STORES.socialLinks.twitter}`,
   },
 ];
 
-import { STORES, getProductsByStore } from "../../dummyData.js";
+const STORE_SORT_OPTIONS = [
+  "Newest first",
+  "Best selling",
+  "Low stock",
+  "Price: low to high",
+  "Price: high to low",
+];
+// config per CATEGORY — controls Icon and color
+const SORT_CONFIG = {
+  "Newest first": (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+  "Most popular": (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
+  "Price: low to high": (a, b) => a.price - b.price,
+  "Price: high to low": (a, b) => b.price - a.price,
+  "Most sold": (a, b) => (b.soldCount || 0) - (a.soldCount || 0),
+};
+
+import { getStoreById, getProductsByStore } from "../../dummyData.js";
 
 export default function StorePublicPage() {
   const [followed, setFollowed] = useState(false);
   const [tab, setTab] = useState("PRODUCTS");
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [sort, setSort] = useState("Newest first");
+  // const [sortOpen, setSortOpen] = usestate(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -131,6 +131,11 @@ export default function StorePublicPage() {
     };
   }, []);
 
+  const CATEGORIES = [
+    "All",
+    ...new Set(getProductsByStore("store-001").flatMap((p) => p.category)),
+  ];
+
   return (
     <>
       <AnimatePresence>
@@ -146,7 +151,7 @@ export default function StorePublicPage() {
             <div
               className="scroll_active fixed-top"
               style={{
-                backgroundImage: `linear-gradient( #042c09e1 ) , url(${STORES.cover}) `,
+                backgroundImage: `linear-gradient( #001403a1 ) , url(${STORES.coverImage}) `,
               }}
             >
               {/* Topbar */}
@@ -171,10 +176,10 @@ export default function StorePublicPage() {
                       width={50}
                       height={50}
                       style={{ objectFit: "cover" }}
-                      src="public/images/profile.jpg"
+                      src={STORES.logo}
                     />
 
-                    <h2
+                    <h4
                       className="fw-bold"
                       style={{
                         color: "#f0f6fc",
@@ -182,19 +187,24 @@ export default function StorePublicPage() {
                       }}
                     >
                       {STORES.name}
-                    </h2>
+                    </h4>
                   </div>{" "}
-                  <div className="d-flex gap-2 gap-sm-3 align-items-center ms-auto me-3">
-                    <FiSearch size={24} />
+                  <div className="d-flex gap-4 gap-sm-5 align-items-center ms-auto me-3">
+                    <FiSearch size={30} />
 
-                    <Nav.Link as={Link} to="/cart">
-                      <FiShoppingCart size={24} />
+                    <Nav.Link
+                      as={Link}
+                      to="/cart"
+                      style={{ position: "relative" }}
+                    >
+                      <FiShoppingCart size={30} />
                       <span
-                        className="px-1 fw-bold"
+                        className="px-2 fw-bold"
                         style={{
                           background: "#d7e600",
                           color: "#000",
-                          top: 20,
+                          top: -10,
+                          left: 20,
                           fontSize: "15px",
                           position: "absolute",
                           borderRadius: "50%",
@@ -221,7 +231,7 @@ export default function StorePublicPage() {
             }}
           >
             <Image
-              src={STORES.cover}
+              src={STORES.coverImage}
               style={{
                 objectFit: "cover",
                 width: "100%",
@@ -242,7 +252,7 @@ export default function StorePublicPage() {
             {STORES.verified && (
               <div>
                 <small
-                  className="p-2 my-3 mx-sm-4 px-sm-4 me-3 d-flex align-items-center gap-2"
+                  className="px-2 py-1 my-3 mx-sm-4 px-sm-4 me-3 d-flex align-items-center gap-2"
                   style={{
                     background: "rgba(2, 22, 12, 0.82)",
                     color: "#00E676",
@@ -256,15 +266,14 @@ export default function StorePublicPage() {
                     zIndex: 1,
                   }}
                 >
-                  <ShieldCheck /> verified store
+                  <ShieldCheck className="mb-1" /> verified store
                 </small>
               </div>
             )}
 
             {/* store category */}
-
             <small
-              className="p-2 my-3 mx-sm-4 px-sm-4  ms-3"
+              className="px-2 py-1 my-3 mx-sm-4 px-sm-4  ms-3"
               style={{
                 background: "#131602d1",
                 color: "#d7fd00d1",
@@ -296,8 +305,8 @@ export default function StorePublicPage() {
                   display: "inline-block",
                 }}
               >
-                <div className="store-logo-wrapper">
-                  <img src={STORES.logo} className="store-logo" />
+                <div className="profile-logo-wrapper">
+                  <img src={STORES.logo} className="profile-logo" />
                 </div>
                 <span
                   style={{
@@ -308,15 +317,16 @@ export default function StorePublicPage() {
                     height: 20,
                     borderRadius: "50%",
                     background:
-                      STORES.status === "active" ? "#00E676" : "#d60606",
+                      STORES.status === "ACTIVE" ? "#00E676" : "#d60606",
                     border: "2.5px solid #0d1117",
+                    transition: "backgroung 0.3s easeInOut",
                   }}
                 />
               </div>
 
               {/* Store name */}
               <span
-                className="my-4 mb-md-2"
+                className="my-4 mb-sm-2"
                 style={{
                   fontWeight: 800,
                   color: "#f0f6fc",
@@ -332,21 +342,21 @@ export default function StorePublicPage() {
         </div>
 
         <Container>
-          <div className="text-center pb-5">
+          <div className="text-center">
             {/* Meta */}
             <h6
-              className="my-5"
+              className=""
               style={{
                 lineHeight: 1.72,
               }}
             >
-              {STORES.handle} &nbsp;·&nbsp; 📍 {STORES.state} , {STORES.country}{" "}
-              &nbsp;·&nbsp; {STORES.joined}
+              {STORES.handle} &nbsp;·&nbsp; 📍 {STORES.location}
+              &nbsp;·&nbsp; {STORES.createdAt}
             </h6>
 
             {/* Tagline */}
             <h6
-              className="my-5 "
+              className="my-3"
               style={{
                 lineHeight: 1.72,
               }}
@@ -361,29 +371,29 @@ export default function StorePublicPage() {
                 <span
                   className=" inline-flex"
                   style={{
-                    background: "#9cfc64",
+                    background: "#1aee96",
                     borderRadius: "100%",
                     padding: "3px",
                   }}
                 />
-                <p style={{ color: "#9cfc64" }}>
+                <p style={{ color: "#56b990" }}>
                   Open now &nbsp;·&nbsp; Responds within 1 hr
                 </p>
               </div>
             )}
 
             {/* CTAs */}
-
             <div>
               <button
                 onClick={() => setFollowed((f) => !f)}
-                className="text-dark text-center py-2 w-50 my-sm-3 my-md-5"
+                className=" fs-5 fw-bold text-center py-2 w-50 w-lg-100 my-3"
                 style={{
                   background: followed ? "#00E676" : "transparent",
-                  border: followed ? "none" : "#00e677d8",
+                  border: followed ? "none" : "#00e67757",
                   borderRadius: 12,
                   fontSize: "0.92rem",
-                  boxShadow: "0 8px 28px rgba(0,230,118,0.38)",
+                  color: followed ? "#000" : "#00e677f6",
+                  boxShadow: "0 8px 28px rgba(0, 230, 119, 0.2)",
                   transition: "all 0.22s",
                 }}
                 onMouseEnter={(e) =>
@@ -400,24 +410,17 @@ export default function StorePublicPage() {
 
       {/* Stats strip */}
       <Container>
-        <div
-          style={{
-            border: "1px solid rgba(224, 253, 0, 0.74)",
-            borderRadius: "100%",
-          }}
-        />
-        <div className="py-5 d-flex gap-5 justify-content-center flex-wrap">
-          {STORE_STATS.map(({ value, label }) => (
-            <div key={label} className="d-flex flex-column text-center">
-              <h5
-                className="fw-bold mb-1"
+        <div className="py-5  d-flex gap-4 gap-sm-5 justify-content-center flex-wrap">
+          {STORES.stats.map(({ value, label }) => (
+            <div key={label} className="text-center">
+              <h6
+                className="fw-bold mb-3 fs-1"
                 style={{
-                  color: "#b5f506f6",
-                  lineHeight: 1,
+                  color: "#b6eb24f6",
                 }}
               >
                 {value}
-              </h5>
+              </h6>
               <p style={{ letterSpacing: 1 }}>{label}</p>
             </div>
           ))}
@@ -426,11 +429,11 @@ export default function StorePublicPage() {
 
       {/* ── TRUST STRIP ── */}
 
-      <div className="trust-chip-container py-5 ">
+      <div className="trust-chip-container py-3 py-md-4 py-lg-5 ">
         <Container>
           <div className="d-flex gap-4 flex-wrap justify-content-center">
-            {["Verified Seller", "Secure Checkout", "24h Support"].map((t) => (
-              <span key={t} className="trust-chip py-1 px-3">
+            {STORES.trust.map((t) => (
+              <span key={t} className="trust-chip  py-sm-1 px-3">
                 ✓ &nbsp;{t}
               </span>
             ))}
@@ -452,28 +455,28 @@ export default function StorePublicPage() {
       </div>
 
       <Container>
-        <div className="filter-tab d-flex gap-4 gap-sm-5 my-5 ">
-          {[
-            "PRODUCTS",
-            "ABOUT",
-
-            /* "REVIEWS"*/
-          ].map((s) => {
+        <div className=" d-flex justify-content-between  justify-content-md-start gap-md-5 pt-5">
+          {["PRODUCTS", "ABOUT", "REVIEWS"].map((s) => {
             return (
               <div
-                className="px-3 py-1"
+                className="px-3 py-2"
                 key={s}
                 onClick={() => setTab(s)}
                 style={{
                   cursor: "pointer",
-                  border: `0.5px solid ${tab === s ? "#fbff00" : "#f0f0f0da"}`,
+                  border: `0.5px solid ${tab === s ? "#c2c518" : "#f0f0f067"}`,
                   background: tab === s ? "#57580f70" : "",
-                  color: tab === s ? "#d3e016" : "",
                   borderRadius: "18px",
                 }}
               >
                 {" "}
-                <span>{s}</span>
+                <p
+                  style={{
+                    color: tab === s ? "#c0ca2b" : "",
+                  }}
+                >
+                  {s}
+                </p>
               </div>
             );
           })}
@@ -481,10 +484,10 @@ export default function StorePublicPage() {
 
         {/* ── STORE_PRODUCTS ── */}
         {tab === "PRODUCTS" && (
-          <>
+          <div className="my-5 py-lg-3">
             {" "}
             <h6
-              className="mb-3 mb-sm-5"
+              className="mb-4 py-lg-3"
               style={{
                 color: "#00E676",
                 fontWeight: 700,
@@ -497,8 +500,15 @@ export default function StorePublicPage() {
               filter={true}
               product={getProductsByStore("store-001")}
               count={!false}
+              CATEGORIES={CATEGORIES}
+              sort={sort}
+              Store={false}
+              setSort={setSort}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              storeFront={true}
             />
-          </>
+          </div>
         )}
 
         {/* ── ABOUT ── */}
@@ -508,139 +518,119 @@ export default function StorePublicPage() {
             {" "}
             {/* about store */}
             <div
-              className="mt-5 p-4"
+              className="mt-5"
               style={{
-                border: "1px solid rgba(233, 229, 4, 0.4)",
+                border: "1px solid rgba(233, 229, 4, 0.32)",
+                borderRadius: 15,
                 background: "rgba(12, 12, 12, 0.29)",
               }}
             >
               <div
+                className="p-4 py-3"
                 style={{
-                  color: "rgb(255, 251, 5)",
+                  color: "rgb(226, 223, 59)",
+                  borderBottom: "1px solid  rgba(233, 229, 4, 0.27)",
                 }}
               >
                 ABOUT THIS STORE
-                <div
-                  style={{
-                    borderBottom: "1px solid  rgba(233, 229, 4, 0.4)",
-                    padding: "11px",
-                  }}
-                ></div>
               </div>
-
-              <p className="py-4">{STORES.about}</p>
+              <div className="p-4">
+                <p style={{ lineHeight: "25px" }}>{STORES.about}</p>
+              </div>
             </div>
             {/* store policies*/}
             <div
-              className="mt-5 p-4"
+              className="my-5"
               style={{
-                border: "1px solid rgba(233, 229, 4, 0.4)",
+                border: "1px solid rgba(233, 229, 4, 0.32)",
+                borderRadius: 15,
                 background: "rgba(12, 12, 12, 0.29)",
               }}
             >
               <div
+                className="p-4 py-3"
                 style={{
-                  color: "rgb(255, 251, 5)",
+                  color: "rgb(226, 223, 59)",
+                  borderBottom: "1px solid  rgba(233, 229, 4, 0.27)",
                 }}
               >
+                {" "}
                 STORE POLICIES
-                <div
-                  className="mb-4"
-                  style={{
-                    borderBottom: "1px solid  rgba(233, 229, 4, 0.4)",
-                    padding: "11px",
-                  }}
-                ></div>
-                {STORE_POLICIES.map((p) => {
+              </div>
+              <div className="px-4">
+                {STORES.policies.map((p) => {
+                  const policiesConfig = STORE_POLICIES[p.label];
                   return (
-                    p.value && (
+                    <div key={p.label}>
+                      {" "}
                       <Stack
-                        key={p.value}
-                        className="my-5 gap-4 gap-sm-5 "
+                        className="my-4 py-2 gap-3 gap-lg-4 "
                         direction="horizontal"
                       >
-                        <p.Icon
+                        <policiesConfig.Icon
+                          size={20}
                           style={{
-                            color: p.color,
-                            fontSize: "clamp(21px, 2vw, 24px)",
+                            color: policiesConfig.color,
                           }}
                         />
-                        <span style={{ color: "#b4b4b4b0", fontSize: "18px" }}>
-                          {p.tag}
-                        </span>
+                        <h6>{p.label}</h6>
                         <p
                           className="text-white ms-auto text-end"
-                          style={{ lineHeight: 1.4 }}
+                          style={{ lineHeight: "25px" }}
                         >
                           {p.value}
                         </p>
                       </Stack>
-                    )
+                    </div>
                   );
                 })}
               </div>
             </div>
             {/* store contact info*/}
             <div
-              className="mt-5 p-4"
+              className="my-5"
               style={{
-                border: "1px solid rgba(233, 229, 4, 0.4)",
+                border: "1px solid rgba(233, 229, 4, 0.32)",
+                borderRadius: 15,
                 background: "rgba(12, 12, 12, 0.29)",
               }}
             >
               <div
+                className="p-4 py-3"
                 style={{
-                  color: "rgb(255, 251, 5)",
+                  color: "rgb(226, 223, 59)",
+                  borderBottom: "1px solid  rgba(233, 229, 4, 0.27)",
                 }}
               >
-                CONTACT STORE
-                <div
-                  className="mb-4"
-                  style={{
-                    borderBottom: "1px solid  rgba(233, 229, 4, 0.4)",
-                    padding: "11px",
-                  }}
-                ></div>
-                {STORE_CONTACT.map((s) => {
+                CONTACTS
+              </div>
+              <div className="px-4">
+                {STORE_CONTACT.map((c) => {
                   return (
-                    <div key={s.value}>
-                      {" "}
-                      {s.value && (
-                        <Stack
-                          className="my-5 align-items-start"
-                          direction="horizontal"
-                          gap={5}
-                        >
-                          <s.Icon
-                            className="d-flex align-items-center justify-content-center p-2"
-                            size={35}
-                            style={{
-                              color: s.color,
-                              borderRadius: "9px",
-                              background: s.bg,
-                            }}
-                          />
-                          <div className="d-sm-none">
-                            {" "}
-                            <span
-                              style={{ color: "#b4b4b4b08e", fontSize: "18px" }}
-                            >
-                              {s.tag}
-                            </span>
-                            <p className="text=white">{s.value}</p>
-                          </div>
-                          <span
-                            className="d-none d-sm-block"
-                            style={{ color: "#b4b4b4b0", fontSize: "18px" }}
-                          >
-                            {s.tag}
-                          </span>
-                          <p className="text=white d-none d-sm-block ms-auto">
-                            {s.value}
-                          </p>
-                        </Stack>
-                      )}
-                    </div>
+                    <Stack
+                      key={c}
+                      className="my-5 align-items-center"
+                      direction="horizontal"
+                      gap={3}
+                    >
+                      <c.Icon
+                        className="d-flex align-items-center justify-content-center p-2"
+                        size={35}
+                        style={{
+                          color: c.color,
+                          borderRadius: "9px",
+                          background: c.bg,
+                        }}
+                      />
+                      <div>
+                        {" "}
+                        <p>{c.tag}</p>
+                      </div>
+
+                      <p className="text=white d-none d-sm-block ms-auto">
+                        {c.value}
+                      </p>
+                    </Stack>
                   );
                 })}
               </div>

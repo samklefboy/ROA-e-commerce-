@@ -1,8 +1,5 @@
 import { Container, Row, Col } from "react-bootstrap";
 import {
-  FaStar,
-  FaStore,
-  FaShoppingCart,
   FaInstagram,
   FaLinkedin,
   FaTwitter,
@@ -95,13 +92,13 @@ export const Footer = () => {
               className="footer-social-links"
             >
               {[
-                <FaWhatsapp />,
-                <FaInstagram />,
-                <FaLinkedin />,
-                <FaTiktok />,
+                { key: "whatsapp", Icon: FaWhatsapp },
+                { key: "instagram", Icon: FaInstagram },
+                { key: "linkedin", Icon: FaLinkedin },
+                { key: "tiktok", Icon: FaTiktok },
               ].map((link) => (
-                <a key={link} href="#">
-                  {link}
+                <a key={link.key} href="#">
+                  <link.Icon />
                 </a>
               ))}
             </div>

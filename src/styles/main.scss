@@ -14,6 +14,8 @@
 @use "components/wallet";
 @use "components/notification";
 @use "components/dashboard";
+@use "components/shopping";
+@use "components/Checkout";
 
 .mySwiper {
   color: rgba(255, 255, 255, 0.664);
@@ -72,18 +74,61 @@
 
 .filter-tab {
   scroll-behavior: smooth;
-
   overflow-x: auto;
+  display: flex;
+  flex-shrink: 0;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(221, 221, 221, 0.637);
+    border-radius: 30px;
+  }
 
   &::-webkit-scrollbar {
+    width: 10px;
     display: none;
+  }
+
+  @media (min-width: 750px) {
+    &::-webkit-scrollbar {
+      height: 7px;
+      transition: all 1s ease-out;
+      display: block;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(221, 221, 221, 0.637);
+      border-radius: 20px;
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        transition: all 1s ease-in-out;
+      }
+    }
+  }
+
+  .filter-button {
+    border-radius: 15px;
+    white-space: nowrap;
+    transition: all 0.15s;
+    font-weight: 400;
+    border: 0.5px solid #ffffff63;
+    color: #ffffff88;
+    background: transparent;
+
+    &.active {
+      font-weight: 600;
+      border-color: #f3f700d0;
+      color: #f3f700ef;
+      background: #3c3d078f;
+    }
   }
 }
 
 .form-check-input {
-  width: 1.5em !important;
-  height: 1.5em !important;
+  width: 1.3em !important;
+  height: 1.3em !important;
   margin-right: 10px;
+  border-radius: 50% !important;
 
   .form-check-input:checked {
     background: #a8ff059f !important;
@@ -123,7 +168,7 @@
 }
 
 .modal {
-  --bs-modal-width: 850px !important;
+  --bs-modal-width: 950px !important;
   background: rgba(0, 0, 0, 0.582);
   padding-left: 20px !important;
   padding-right: 20px !important;
@@ -131,4 +176,84 @@
 
 .modal-content {
   background: #172417 !important;
+}
+
+.profile-logo-wrapper {
+  width: clamp(125px, 24vw, 300px);
+  aspect-ratio: 1/1;
+  position: relative;
+  border-radius: 22px 0;
+  overflow: hidden;
+  border: 3px solid #e9e504;
+  box-shadow:
+    0 0 20px #666402,
+    0 18px 50px rgba(0, 0, 0, 0.733);
+
+  .profile-logo {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: #000000e5 !important;
+  }
+}
+
+.filter_bottom-sheet {
+  &::-webkit-scrollbar-thumb {
+    background: rgba(221, 221, 221, 0.637);
+    border-radius: 30px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    display: none;
+  }
+
+  @media (min-width: 750px) {
+    &::-webkit-scrollbar {
+      height: 7px;
+      transition: all 1s ease-out;
+      display: block;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(221, 221, 221, 0.637);
+      border-radius: 20px;
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        transition: all 1s ease-in-out;
+      }
+    }
+  }
+}
+
+.modal_content {
+  &::-webkit-scrollbar-thumb {
+    background: rgba(221, 221, 221, 0.637);
+    border-radius: 30px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    display: none;
+  }
+
+  @media (min-width: 750px) {
+    &::-webkit-scrollbar {
+      height: 7px;
+      transition: all 1s ease-out;
+      display: block;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(221, 221, 221, 0.637);
+      border-radius: 20px;
+    }
+
+    &:hover {
+      &::-webkit-scrollbar {
+        transition: all 1s ease-in-out;
+      }
+    }
+  }
 }

@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 5rem;
-  color: #b4b4b4b0 !important;
+  color: #a0a0a0 !important;
   margin-top: clamp(110px, 10vw, 120px);
 
   @keyframes fadeleft {
@@ -76,7 +76,7 @@
   border: 1px solid rgba(255, 238, 0, 0.62);
   background: transparent;
   border-radius: 25px;
-  color: #b4b4b4b0;
+  color: #a0a0a0;
   font-size: 14px;
   transform-origin: center;
   animation: zoom 1.5s ease-in-out infinite;

@@ -508,7 +508,7 @@ export const PRODUCTS = [
     id: "prod-006",
     storeId: "store-001",
     store: STORES[0],
-    type: "CAR",
+    type: "VEHICLE",
     name: "2019 Toyota Camry LE Sedan",
     description:
       "Well maintained 2019 Toyota Camry LE in excellent condition. Originally purchased from a Toyota dealership in the US. Full service history available. No accidents. First owner in Nigeria.",

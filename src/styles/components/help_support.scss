@@ -1,5 +1,5 @@
 .help_support {
-  color: #b4b4b4b0;
+  color: #a0a0a0;
 
   .form-control {
     background: none !important;
@@ -11,7 +11,7 @@
     &:focus,
     &::placeholder {
       box-shadow: none;
-      color: #b4b4b4b0;
+      color: #a0a0a0;
     }
   }
 }
@@ -31,6 +31,6 @@
   }
 
   .accordion-body {
-    color: #b4b4b4b0;
+    color: #a0a0a0;
   }
 }

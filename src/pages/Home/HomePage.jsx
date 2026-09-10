@@ -20,9 +20,10 @@ function HomePage() {
       <Container>
         <div className="align-items-center text-light text-center about-us text-light ">
           <div
-            className="mb-5 hero1"
+            className="mb-4 mb-xl-5 hero1"
             style={{
               fontStyle: "italic",
+              lineHeight: 1.2,
             }}
           >
             YOUR MARKET
@@ -33,6 +34,7 @@ function HomePage() {
             style={{
               color: "rgb(255, 238, 0)",
               fontStyle: "italic",
+              lineHeight: 1,
             }}
           >
             <div className="hero2">YOUR</div>{" "}

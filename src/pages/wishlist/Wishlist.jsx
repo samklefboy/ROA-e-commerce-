@@ -37,7 +37,7 @@ export const WishlistPage = () => {
           >
             <div>
               <h6>Total value</h6>
-              <h4 className="text-light">&#8358; 33,500</h4>
+              <h4 className="text-light">₦ 33,500</h4>
             </div>
 
             <button

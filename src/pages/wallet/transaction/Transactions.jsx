@@ -1,237 +1,421 @@
-import { Container, Stack } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router";
-import {
-  FaArrowAltCircleDown,
-  FaArrowAltCircleUp,
-  FaArrowLeft,
-  FaCheckCircle,
-  FaDownload,
-  FaShoppingBag,
-  FaStore,
-} from "react-icons/fa";
-import { useState, useMemo, useEffect } from "react";
+import { FaArrowLeft, FaDownload, FaShoppingBag } from "react-icons/fa";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { SummaryCard } from "./components/SummaryCard";
 import { SearchBar } from "./components/Searchbar";
-import { Filter } from "./components/Filter";
+import { FilterChip } from "./components/Filter";
 import { GroupedTransaction } from "./components/GroupedTransaction";
-import { Selected } from "./components/Selected";
-import { getTransactionsByUser } from "../../../dummyData";
+import TransactionDetail from "./components/TransactionDetail";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Calendar,
+  CreditCard,
+} from "react-bootstrap-icons";
+import { FiRefreshCw } from "react-icons/fi";
+import CustomDate from "./components/DateFilter";
 
-// transaction types config
-const TX_CONFIG = {
+/// ============================================================
+// TRANSACTION TYPE CONFIG
+// ============================================================
+export const TYPE_CONFIG = {
   TOPUP: {
-    Icon: FaArrowAltCircleDown,
+    label: "Top up",
+    Icon: ArrowDownCircle,
     color: "#1D9E75",
-    bg: "rgba(29,158,117,0.08)",
-    label: "Wallet top up",
-  },
-  WITHDRAWAL: {
-    Icon: FaArrowAltCircleUp,
-    color: "#c9a84c",
-    bg: "rgba(201,168,76,0.08)",
-    label: "Withdrawal",
-  },
-  PURCHASE: {
-    Icon: FaShoppingBag,
-    color: "#c9a84c",
-    bg: "rgba(201,168,76,0.08)",
-    label: "Order payment",
-  },
-  REFUND: {
-    Icon: FaCheckCircle,
-    color: "#378ADD",
-    bg: "rgba(55,138,221,0.08)",
-    label: "Refund received",
+    bg: "rgba(29,158,117,0.1)",
+    sign: "+",
+    isCredit: true,
   },
   SALE: {
-    Icon: FaStore,
-    color: "#1D9E75",
-    bg: "rgba(29,158,117,0.08)",
     label: "Sale received",
+    Icon: FaShoppingBag,
+    color: "#1D9E75",
+    bg: "rgba(29,158,117,0.1)",
+    sign: "+",
+    isCredit: true,
+  },
+  REFUND: {
+    label: "Refund",
+    Icon: FiRefreshCw,
+    color: "#1D9E75",
+    bg: "rgba(29,158,117,0.1)",
+    sign: "+",
+    isCredit: true,
+  },
+  PURCHASE: {
+    label: "Purchase",
+    Icon: CreditCard,
+    color: "#c0392b",
+    bg: "rgba(192,57,43,0.1)",
+    sign: "-",
+    isCredit: false,
+  },
+  WITHDRAWAL: {
+    label: "Withdrawal",
+    Icon: ArrowUpCircle,
+    color: "#c0392b",
+    bg: "rgba(192,57,43,0.1)",
+    sign: "-",
+    isCredit: false,
   },
 };
 
-//filter name config
-const FILTERS = [
-  "All",
-  "Top up",
-  "Withdrawal",
-  "Purchases",
-  "Refunds",
-  "Sales",
+// ============================================================
+// FILTER TABS
+// ============================================================
+const FILTER_TABS = [
+  { key: "ALL", label: "All" },
+  { key: "CREDIT", label: "Money in" },
+  { key: "DEBIT", label: "Money out" },
+  { key: "TOPUP", label: "Top ups" },
+  { key: "WITHDRAWAL", label: "Withdrawals" },
+  { key: "PURCHASE", label: "Purchases" },
+  { key: "SALE", label: "Sales" },
+  { key: "REFUND", label: "Refunds" },
 ];
+
+// ============================================================
+// DATE RANGE PRESETS
+// ============================================================
+export const DATE_PRESETS = [
+  { key: "all", label: "All time" },
+  { key: "today", label: "Today" },
+  { key: "week", label: "This week" },
+  { key: "month", label: "This month" },
+  { key: "3months", label: "Last 3 months" },
+  { key: "custom", label: "Custom range" },
+];
+// ============================================================
+// HELPERS
+// ============================================================
+function getDateLabel(dateString) {
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const txDate = new Date(dateString).toDateString();
+  if (txDate === today) return "Today";
+  if (txDate === yesterday) return "Yesterday";
+  return new Date(dateString).toLocaleDateString("en-NG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getDateRangeFromPreset(preset) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (preset) {
+    case "today":
+      return { from: today, to: new Date(today.getTime() + 86400000 - 1) };
+    case "week": {
+      const day = today.getDay();
+      const from = new Date(today.getTime() - day * 86400000);
+      return { from, to: now };
+    }
+    case "month": {
+      const from = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { from, to: now };
+    }
+    case "3months": {
+      const from = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+      return { from, to: now };
+    }
+    default:
+      return null;
+  }
+}
 
 export function Transactions() {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState("All");
+
+  // ---- states ----
+  const [transactions, setTransactions] = useState([]);
+  const [walletSummary, setWalletSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState("ALL");
   const [search, setSearch] = useState("");
-  const [showDetails, setShowDetails] = useState(false);
+  const [datePreset, setDatePreset] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [dateOpen, setDateOpen] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState(null);
-  const [txns, setTxns] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState({
-    balance: 0,
-    moneyIn: 0,
-    moneyOut: 0,
-    inCount: 0,
-    outCount: 0,
-  });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const handleSelectedTnx = (txn) => {
-    setShowDetails(true);
-    setSelectedTxn(txn);
-  };
+  const PAGE_SIZE = 20;
 
-  // fetch on mount
-  {
-    /*  useEffect(() => {
-    const fetchTransactions = async () => {
+  const dateRange = useMemo(() => {
+    datePreset !== "custom"
+      ? getDateRangeFromPreset(datePreset)
+      : customFrom && customTo
+        ? { from: new Date(customFrom), to: new Date(customTo) }
+        : null;
+  }, [datePreset, customFrom, customTo]);
+
+  // FETCH TRANSACTIONS
+  const fetchTransactions = useCallback(
+    async (pageNum = 1, reset = false) => {
       try {
-        setLoading(true);
-        const { data } = await axios.get("/api/wallet/transactions");
-        setTxns(data.transactions);
-        setSummary(data.summary);
+        if (pageNum === 1) setLoading(true);
+        else setLoadingMore(true);
+
+        const { data } = await axios.get("/api/wallet/transactions", {
+          params: {
+            page: pageNum,
+            limit: PAGE_SIZE,
+            type:
+              activeFilter === "ALL" ||
+              activeFilter === "CREDIT" ||
+              activeFilter === "DEBIT"
+                ? undefined
+                : activeFilter,
+            credit: activeFilter === "CREDIT" ? true : undefined,
+            debit: activeFilter === "DEBIT" ? true : undefined,
+            search: search.trim() || undefined,
+            dateFrom: dateRange?.from?.toISOString() || undefined,
+            dateTo: dateRange?.to?.toISOString() || undefined,
+            status: undefined, // pass "FAILED" to filter failed only
+          },
+        });
+
+        const incomingTransactions = Array.isArray(data.transactions)
+          ? data.transactions
+          : [];
+
+        if (reset || pageNum === 1) {
+          setTransactions(incomingTransactions);
+        } else {
+          setTransactions((prev) => [...prev, ...incomingTransactions]);
+        }
+        setHasMore(data.hasMore);
+        setPage(pageNum || Number(data.page));
       } catch (err) {
-        console.error(err);
+        console.error("Transactions fetch failed:", err);
+        if (pageNum === 1) {
+          setTransactions([]);
+        }
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
-    };
-    fetchTransactions();
-  }, [txns]); */
-  }
+    },
+    [activeFilter, search, dateRange],
+  );
 
-  // In NotificationsPage.jsx
+  // FETCH WALLET SUMMARY
+  const fetchSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+      const { data } = await axios.get("/api/wallet/summary", {
+        params: {
+          dateFrom: dateRange?.from?.toISOString(),
+          dateTo: dateRange?.to?.toISOString(),
+        },
+      });
+      setWalletSummary(data);
+    } catch (err) {
+      console.error("wallet summary fetch failed", err);
+      setWalletSummary(null);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [dateRange]);
+
   useEffect(() => {
-    const myTrans = getTransactionsByUser("user-001");
-    setTxns(myTrans);
-    setLoading(false);
-  }, []);
+    fetchSummary();
+  }, [fetchSummary]);
 
-  // filter and search
-  const filtered = useMemo(() => {
-    return txns.filter((tx) => {
-      const matchFilter =
-        filter === "All"
-          ? true
-          : filter === "Top up"
-            ? tx.type === "TOPUP"
-            : filter === "Withdrawal"
-              ? tx.type === "WITHDRAWAL"
-              : filter === "Purchases"
-                ? tx.type === "PURCHASE"
-                : filter === "Refunds"
-                  ? tx.type === "REFUND"
-                  : filter === "Sales"
-                    ? tx.type === "SALE"
-                    : true;
+  // FETCH TRANSACTIONS WHEN FILTER CHANGES
+  useEffect(() => {
+    if (datePreset === "custom" && (!customFrom || !customTo)) {
+      return;
+    }
 
-      const matchSearch = search
-        ? tx.title.toLowerCase().includes(search.toLowerCase()) ||
-          tx.description.toLowerCase().includes(search.toLowerCase())
-        : true;
+    fetchTransactions(1, true);
+  }, [fetchTransactions, datePreset, customFrom, customTo]);
 
-      return matchFilter && matchSearch;
-    });
-  }, [txns, filter, search]);
-
-  // group by date
-
+  // GROUP BY DATE — useMemo
   const grouped = useMemo(() => {
     const groups = {};
-
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    const today = new Date().toDateString();
-
-    const sorted = [...filtered].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-    );
-
-    sorted.forEach((tx) => {
-      const date = new Date(tx.createdAt).toDateString("en-NG", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const label =
-        date === today ? "Today" : date === yesterday ? "Yesterday" : date;
-
+    transactions.forEach((txn) => {
+      const label = getDateLabel(txn.createdAt);
       if (!groups[label]) groups[label] = [];
-      groups[label].push(tx);
+      groups[label].push(txn);
     });
+    return Object.entries(groups);
+  }, [transactions]);
 
-    return groups;
-  }, [filtered]);
-
-  const isIncoming = (type) => ["TOPUP", "REFUND", "SALE"].includes(type);
-
-  const isFailed = (type) => ["FAILED"].includes(type);
+  const tabCounts = walletSummary?.counts || {};
 
   return (
     <>
-      <Container className="px-3 py-3 transaction">
-        {/* Topbar */}
+      {/* Topbar */}
+      <div
+        className="py-3 fixed-top"
+        style={{
+          background: "#001402c5",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          borderBottom: "#025e0bd5",
+        }}
+      >
+        <Container>
+          <div className=" d-flex align-items-center justify-content-between ">
+            {" "}
+            <div className="d-flex gap-3 gap-md-5 align-items-center">
+              <div
+                onClick={() => navigate(-1)}
+                className="d-flex align-items-center"
+                style={{
+                  background: "#ffffff42",
+                  borderRadius: "100%",
+                  padding: "10px",
+                }}
+              >
+                <FaArrowLeft size={15} />
+              </div>
 
-        <div
-          className="mb-5 d-flex  align-items-center justify-content-between p-3 py-4 fixed-top"
-          style={{ background: "#000", borderRadius: 12 }}
-        >
-          <div className="d-flex gap-3 gap-md-5 align-items-center">
-            <div
-              onClick={() => navigate(-1)}
-              className="d-flex align-items-center "
-              style={{
-                background: "#ffffff42",
-
-                borderRadius: "100%",
-                padding: "10px",
-              }}
-            >
-              <FaArrowLeft size={15} />
+              <h4 className="text-light fw-bold">Transactions</h4>
             </div>
+            <div className="d-flex align-items-center gap-4">
+              {/* Date filter */}
+              <button
+                className="d-flex align-items-center gap-2"
+                type="button"
+                onClick={() => setDateOpen(true)}
+                style={{
+                  background: datePreset !== "all" ? "#c9c14c31" : "#015501a4",
+                  border: `0.5px solid ${datePreset !== "all" ? "#c9c14cd5" : "#1a2a1a"}`,
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  fontSize: 13,
+                  color: datePreset !== "all" ? "#e2d51c" : "#b6b6b6",
+                  cursor: "pointer",
+                }}
+              >
+                <Calendar style={{ fontSize: 15 }} />
+                {DATE_PRESETS.find((d) => d.key === datePreset).label ||
+                  "All time"}
+              </button>
+            </div>
+          </div>
+        </Container>
+      </div>
 
-            <h3 className="text-light">
-              <b>Transactions</b>
-            </h3>
+      <Container>
+        <section style={{ marginTop: "110px" }}>
+          {/* Summary card */}
+          <SummaryCard
+            summary={walletSummary}
+            summaryLoading={summaryLoading}
+          />
+
+          {/* Search */}
+          <SearchBar search={search} setSearch={setSearch} />
+
+          {/* Filters */}
+          <FilterChip
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+            FILTERS={FILTER_TABS}
+            tabCounts={tabCounts}
+          />
+
+          {/* Results count */}
+          <div className="px-3 d-flex align-items-center justify-content-between">
+            <p>
+              {transactions.length} transaction
+              {transactions.length !== 1 ? "s" : ""}
+              {search && ` matching "${search}"`}
+            </p>
+            {walletSummary?.failedCount > 0 && (
+              <p
+                className="px-3 py-1"
+                style={{
+                  color: "#c0392b",
+                  background: "rgba(192, 58, 43, 0.21)",
+                  borderRadius: 7,
+                }}
+              >
+                {walletSummary?.failedCount} failed
+              </p>
+            )}
           </div>
 
-          <FaDownload className="fs-5" />
-        </div>
+          {/* Grouped transactions */}
+          <GroupedTransaction
+            grouped={grouped}
+            loading={loading}
+            setSelectedTnx={setSelectedTxn}
+            transactions={transactions}
+            search={search}
+            activeFilter={activeFilter}
+            datePreset={datePreset}
+            FILTER_TABS={FILTER_TABS}
+            setActiveFilter={setActiveFilter}
+            setDatePreset={setDatePreset}
+            setSearch={setSearch}
+          />
 
-        {/* Summary card */}
+          {/* Load more */}
+          {hasMore && (
+            <div style={{ padding: "16px 0", textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={() => fetchTransactions(page + 1)}
+                disabled={loadingMore}
+                style={{
+                  padding: "10px 28px",
+                  background: "transparent",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  color: "#888",
+                  cursor: "pointer",
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                }}
+              >
+                {loadingMore ? "Loading..." : "Load more"}
+              </button>
+            </div>
+          )}
 
-        <SummaryCard summary={summary} />
-
-        {/* Search */}
-
-        <SearchBar search={search} setSearch={setSearch} />
-
-        {/* Filters */}
-
-        <Filter filter={filter} setFilter={setFilter} FILTERS={FILTERS} />
-
-        {/* Grouped transactions */}
-
-        <GroupedTransaction
-          grouped={grouped}
-          TX_CONFIG={TX_CONFIG}
-          isFailed={isFailed}
-          isIncoming={isIncoming}
-          setSelected={setShowDetails}
-          loading={loading}
-          handleSelectedTnx={handleSelectedTnx}
-        />
+          {/* End of list */}
+          {!loading && !hasMore && transactions.length > 0 && (
+            <p
+              style={{
+                textAlign: "center",
+              }}
+            >
+              All {transactions.length} transactions shown
+            </p>
+          )}
+        </section>
       </Container>
 
-      {/* Detail bottom sheet */}
-      {showDetails && (
-        <Selected
-          show={() => setShowDetails(true)}
+      {/* Date filter bottom sheet */}
+      {dateOpen && (
+        <CustomDate
+          setDateOpen={setDateOpen}
+          setDatePreset={setDatePreset}
+          datePreset={datePreset}
+          customFrom={customFrom}
+          setCustomFrom={setCustomFrom}
+          customTo={customTo}
+          setCustomTo={setCustomTo}
+        />
+      )}
+
+      {/* TRANSACTION DETAIL SHEET */}
+      {selectedTxn && (
+        <TransactionDetail
           txn={selectedTxn}
-          TX_CONFIG={TX_CONFIG}
-          isFailed={isFailed}
-          isIncoming={isIncoming}
-          setShowDetails={setShowDetails}
+          onClose={() => setSelectedTxn(null)}
         />
       )}
     </>

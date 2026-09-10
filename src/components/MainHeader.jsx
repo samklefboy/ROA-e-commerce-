@@ -7,10 +7,12 @@ import HeaderLogo from "./header/HeaderLogo";
 import HeaderSearch from "./header/HeaderSearch";
 import HeaderIcons from "./header/HeaderIcons";
 import HeaderAuth from "./header/HeaderAuth";
+import ProductFilter from "./product/ProductFilter";
 
 const MainHeader = ({
   title,
-  orders,
+  searchValue,
+  setSearch,
   showNotification = true,
   search = true,
   hamburger = true,
@@ -19,6 +21,10 @@ const MainHeader = ({
   showWishlist = false,
   showSearchbtn = true,
   ownStore = false,
+  CATEGORIES,
+  selectedCategory,
+  setSelectedCategory,
+  shop = false,
 }) => {
   const navigate = useNavigate();
 
@@ -99,7 +105,9 @@ const MainHeader = ({
             )}
           </div>
 
-          {search && <HeaderSearch />}
+          {search && (
+            <HeaderSearch search={searchValue} setSearch={setSearch} />
+          )}
 
           <div className=" nav-icons">
             <HeaderIcons

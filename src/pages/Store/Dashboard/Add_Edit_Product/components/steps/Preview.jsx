@@ -366,9 +366,9 @@ export function Preview({ formData, handleSubmit, loading, handleBack }) {
                     parseFloat(formData.oldPrice) > price && (
                       <small
                         className="old-price "
-                        style={{ color: "#b4b4b4b0" }}
+                        style={{ color: "#a0a0a0" }}
                       >
-                        &#8358; {parseFloat(formData.oldPrice).toLocaleString()}
+                        ₦ {parseFloat(formData.oldPrice).toLocaleString()}
                       </small>
                     )}
 

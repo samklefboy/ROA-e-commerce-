@@ -1,133 +1,136 @@
-import { Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
-export function SummaryCard({ summary }) {
+export function SummaryCard({ summary, summaryLoading }) {
   const navigate = useNavigate();
 
   return (
     <div
-      className=" p-5 mt-5"
+      className=" px-3 px-sm-4 my-5"
       style={{
-        background: "linear-gradient(135deg, #142714, #3e4b06)",
-        border: "0.5px solid #19c019a9",
+        background: "linear-gradient(135deg, #566e0062, #007a1a59)",
+        border: "0.5px solid #196d00c0",
         borderRadius: 16,
-        marginBottom: "100px",
       }}
     >
-      <Row
-        className="g-5 align-items-center pb-5"
-        style={{ borderBottom: "0.5px solid rgba(255, 255, 255, 0.75)" }}
+      <div
+        className="d-flex align-items-center gap-5 justify-content-between py-4"
+        style={{
+          borderBottom: "0.5px solid rgba(0, 41, 5, 0.62)",
+        }}
       >
-        <Col className="col-12 col-md-5">
-          <div>
-            <h5
-              style={{
-                lineHeight: 2,
-                textWrap: "nowrap",
-                textOverflow: "ellipsis",
-              }}
-              className="mb-3"
-            >
-              Wallet balance
-            </h5>
-            <p
-              className="fw-bold fs-5"
-              style={{
-                fontFamily: "Bebas+Neue",
-                color: "#facc15",
-              }}
-            >
-              ₦ {summary.balance.toLocaleString()}.00
-            </p>
-          </div>
-        </Col>
+        <div>
+          <h6
+            style={{
+              textWrap: "nowrap",
+              textOverflow: "ellipsis",
+            }}
+            className="mb-1"
+          >
+            Wallet balance
+          </h6>
+          <span
+            className="fw-bold "
+            style={{
+              fontFamily: "Syne",
+              fontSize: 26,
+              color: "#facc15",
+            }}
+          >
+            {" "}
+            {summaryLoading ? "—" : `₦${summary?.balance.toLocaleString()}`}
+          </span>
+        </div>
 
-        <Col>
-          <div className="d-flex justify-content-md-end gap-4 gap-md-5">
-            <button
-              className="px-4 px-md-4"
-              onClick={() => navigate("/wallet/topup")}
-              style={{
-                background: "#4d4d1671",
-                border: "0.5px solid #f2f700",
-                borderRadius: 8,
-                color: "#f2f700",
-              }}
-            >
-              <h6 style={{ lineHeight: "15px" }}>Top up</h6>
-            </button>
-            <button
-              className="px-4 px-md-4"
-              onClick={() => navigate("/wallet/withdraw")}
-              style={{
-                background: "rgba(11, 65, 48, 0.66)",
-                border: "0.5px solid rgba(32, 199, 146, 0.3)",
-                borderRadius: 8,
-                color: "#0ec78c",
-              }}
-            >
-              <h6>Withdraw</h6>
-            </button>
-          </div>
-        </Col>
-      </Row>
+        <div className="d-flex gap-3 flex-wrap ms-auto ">
+          <button
+            type="button"
+            className=" ms-auto p-1 p-sm-2 px-sm-3 "
+            onClick={() => navigate("/wallet/topup")}
+            style={{
+              background: "#d1d418",
+              border: "none",
+              borderRadius: 10,
+              color: "#161601",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Top up
+          </button>
+          <button
+            type="button"
+            className="p-1 p-sm-2 px-sm-3 ms-auto"
+            onClick={() => navigate("/wallet/withdraw")}
+            style={{
+              background: "#1acf90ec",
+              border: "none",
+              borderRadius: 10,
+              color: "#011d13",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
 
-      <Row className="g-5 align-items-center my-3">
+      <div className="d-flex flex-wrap align-items-center justify-content-between py-4">
         {[
           {
             label: "Money in",
-            amount: summary.moneyIn,
-            count: summary.inCount,
+            amount: summary?.moneyIn,
+            count: summary?.inCount || 0,
             color: "#1D9E75",
             Icon: FaArrowDown,
           },
           {
             label: "Money out",
-            amount: summary.moneyOut,
-            count: summary.outCount,
-            color: "#facc15",
+            amount: summary?.moneyOut,
+            count: summary?.outCount,
+            color: "#c0392b",
             Icon: FaArrowUp,
           },
         ].map((s) => {
           return (
-            <Col key={s.label} className="col-12 col-sm-6">
+            <div key={s.label}>
               <div
                 className="p-3"
                 style={{
-                  boxShadow: "-0px -1px 10px #00e70057",
                   borderRadius: 12,
+                  background: "linear-gradient(135deg, #001605ba #001405c7)",
                 }}
               >
-                <h6
-                  className="text-white mb-2"
+                <div
+                  className="d-flex align-items-center gap-2"
                   style={{
-                    letterSpacing: 1,
                     textTransform: "uppercase",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
                   }}
                 >
                   <s.Icon style={{ color: s.color }} />
-                  {s.label}
-                </h6>
+                  <p className="text-white ">{s.label}</p>
+                </div>
 
-                <p
-                  className="fs-4 fw-bold mb-2"
+                <span
+                  className=" my-3"
                   style={{
+                    fontFamily: "Syne",
+                    fontSize: 26,
                     color: s.color,
                   }}
                 >
-                  ₦ {s.amount.toLocaleString()}
-                </p>
+                  {summaryLoading ? "—" : `₦${s.amount.toLocaleString()}`}.00
+                </span>
 
-                <p>{s.count} transactions</p>
+                <p>
+                  {s.count} transaction{s.count === 1 ? "" : "s"}
+                </p>
               </div>
-            </Col>
+            </div>
           );
         })}
-      </Row>
+      </div>
     </div>
   );
 }

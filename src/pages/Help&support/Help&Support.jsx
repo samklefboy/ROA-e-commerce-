@@ -65,7 +65,7 @@ export default function Help_Support() {
 
             <div
               className="d-flex align-items-center gap-2 mt-4 px-3 py-2"
-              style={{ border: "1px solid #b4b4b4b091", borderRadius: "15px" }}
+              style={{ border: "1px solid #a0a0a091", borderRadius: "15px" }}
             >
               <FaSearch />{" "}
               <Form.Control

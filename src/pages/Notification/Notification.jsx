@@ -98,13 +98,14 @@ const FILTERS = [
   { key: "wishlist", label: "Wishlist", types: ["WISHLIST_RESTOCK"] },
 ];
 
- // fetch from backend
-{  useEffect(() => {
+// fetch from backend
+{
+  useEffect(() => {
     const fetch = async () => {
       try {
         setLoading(true);
         //   const { data } = await axios.get("/api/notifications");
-     //   setNotifications(/* data */);
+        //   setNotifications(/* data */);
       } catch (err) {
         console.error(err);
       } finally {
@@ -112,7 +113,8 @@ const FILTERS = [
       }
     };
     fetch();
-  }, []);}
+  }, []);
+}
 
 // date grouping
 function getDateLabel(dateString) {
@@ -131,16 +133,12 @@ function getDateLabel(dateString) {
 }
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([]);
+  //  const [notifications, setNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
- useEffect(() => {
-  const myNotifs = getNotificationsByUser("user-001");
-  setNotifications(myNotifs);
-  setLoading(false);
-}, [notifications]);
+  const notifications = getNotificationsByUser("user-001");
 
   // filter count per tab
   const filterCounts = useMemo(() => {
@@ -264,5 +262,3 @@ export default function Notifications() {
     </section>
   );
 }
-
-export default Notifications;

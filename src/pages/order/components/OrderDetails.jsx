@@ -6,6 +6,7 @@ import OrderStatusBadge from "../../Store/Dashboard/orders/components/OrderStatu
 import OrderTimeline from "../../Store/Dashboard/orders/components/OrderTimeline";
 import {
   ChevronRight,
+  Headset,
   Lock,
   ShieldCheck,
   Star,
@@ -13,10 +14,20 @@ import {
   Whatsapp,
   X,
 } from "react-bootstrap-icons";
-import { FiShoppingBag } from "react-icons/fi";
+import { FiMapPin, FiShoppingBag } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { FaFileInvoice } from "react-icons/fa";
 
-function OrderDetails({ order, onHide, show, loading, handleCancel }) {
+function OrderDetails({
+  order,
+  onHide,
+  show,
+  loading,
+  handleCancel,
+  cancelModal,
+  setCancelModal,
+  cancelLoad,
+}) {
   const navigate = useNavigate();
 
   if (loading) {
@@ -518,6 +529,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                   },
                 ].map((row, i) => (
                   <div
+                    className="py-3"
                     key={row.label}
                     style={{
                       display: "flex",
@@ -562,6 +574,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
             {/* DELIVERY ADDRESS */}
             <motion.div variants={fadedown} className="my-5 py-3">
               <div
+                className="p-3 px-sm-4"
                 style={{
                   background: "#111a11",
                   border: "0.5px solid #1a2a1a",
@@ -571,6 +584,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
               >
                 <h6 style={{ color: "#ebe700" }}>Delivery address</h6>
                 <div
+                  className="py-4"
                   style={{
                     background: "#0a1a0a",
                     border: "0.5px solid #1a2a1a",
@@ -585,22 +599,18 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                       gap: 8,
                     }}
                   >
-                    <i
-                      className="ti ti-map-pin"
+                    <FiMapPin
                       style={{
                         fontSize: 16,
-                        color: "#c9a84c",
+                        color: "#cac83c",
                         flexShrink: 0,
-                        marginTop: 1,
                       }}
                     />
                     <div>
                       <p
+                        className="text-white"
                         style={{
-                          fontSize: 13,
-                          color: "#ddd",
                           lineHeight: 1.6,
-                          margin: 0,
                         }}
                       >
                         {order.deliveryAddress?.street}
@@ -609,16 +619,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                         {order.deliveryAddress?.state}
                       </p>
                       {order.deliveryNote && (
-                        <p
-                          style={{
-                            fontSize: 12,
-                            color: "rgba(255,255,255,0.35)",
-                            marginTop: 6,
-                            marginBottom: 0,
-                          }}
-                        >
-                          📝 {order.deliveryNote}
-                        </p>
+                        <p className="mt-3">📝 {order.deliveryNote}</p>
                       )}
                     </div>
                   </div>
@@ -629,6 +630,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
             {/* ORDER INFO */}
             <motion.div variants={fadedown} className="my-5 py-3">
               <div
+                className="p-3 px-sm-4"
                 style={{
                   background: "#111a11",
                   border: "0.5px solid #1a2a1a",
@@ -674,6 +676,7 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                     : []),
                 ].map((row) => (
                   <div
+                    className="py-4"
                     key={row.label}
                     style={{
                       display: "flex",
@@ -683,26 +686,97 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                       borderBottom: "0.5px solid #1a2a1a",
                     }}
                   >
-                    <span
+                    <p>{row.label}</p>
+                    <p
+                      className="text-white text-end"
                       style={{
-                        fontSize: 12,
-                        color: "rgba(255,255,255,0.35)",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {row.label}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "#ddd",
                         fontWeight: 500,
-                        textAlign: "right",
                         maxWidth: "60%",
                       }}
                     >
                       {row.val}
-                    </span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* NEED HELP */}
+            <motion.div variants={fadedown} className="my-5 py-3">
+              <div
+                className="p-3 px-sm-4"
+                style={{
+                  background: "#111a11",
+                  border: "0.5px solid #1a2a1a",
+                  borderRadius: 14,
+                  overflow: "hidden",
+                }}
+              >
+                <h6 style={{ color: "#ebe700" }}>Need help?</h6>
+                {[
+                  {
+                    Icon: Whatsapp,
+                    color: "#1D9E75",
+                    label: "Contact store",
+                    sub: `Chat with ${order.store?.name}`,
+                    action: () => navigate(`/chat/${order.storeId}`),
+                  },
+                  {
+                    Icon: Headset,
+                    color: "#378ADD",
+                    label: "r.o.a. support",
+                    sub: "We are here to help",
+                    action: () => navigate("/help"),
+                  },
+                  {
+                    Icon: FaFileInvoice,
+                    color: "#c9c14c",
+                    label: "View invoice",
+                    sub: "Download PDF receipt",
+                    action: () => {},
+                  },
+                ].map((btn) => (
+                  <div
+                    className="py-3"
+                    key={btn.label}
+                    onClick={btn.action}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 14px",
+                      cursor: "pointer",
+                      borderTop: "0.5px solid #1a2a1a",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        background: `${btn.color}15`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <btn.Icon style={{ fontSize: 18, color: btn.color }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p
+                        className="text-white"
+                        style={{
+                          fontWeight: 500,
+                          marginBottom: 2,
+                        }}
+                      >
+                        {btn.label}
+                      </p>
+                      <p>{btn.sub}</p>
+                    </div>
+                    <ChevronRight style={{ fontSize: 14, color: "#555" }} />
                   </div>
                 ))}
               </div>
@@ -733,10 +807,10 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
             )}
           </motion.div>
         </Container>
-        {/* ---- BOTTOM ACTION BAR ---- */}
-        {(isActionable || isCancellable) && (
+
+        {/* BOTTOM ACTION BAR */}
+        {canCancel && (
           <div
-            className="d-flex gap-3 gap-lg-5"
             style={{
               position: "sticky",
               bottom: 0,
@@ -744,58 +818,29 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
               width: "100%",
               background: "rgba(10,26,10,0.97)",
               backdropFilter: "blur(10px)",
-              borderTop: "0.5px solid #a3a108",
+              borderTop: "0.5px solid #1a2a1a",
               padding: "12px 16px",
               zIndex: 20,
             }}
           >
-            {/* Cancel button */}
-            {isCancellable && (
-              <button
-                type="button"
-                onClick={() => setCancelModal(true)}
-                disabled={actionLoad}
-                style={{
-                  flex: 1,
-                  padding: 13,
-                  background: "transparent",
-                  border: "0.5px solid rgba(192,57,43,0.3)",
-                  borderRadius: 12,
-                  fontWeight: 600,
-                }}
-              >
-                <p style={{ color: "#e91f09" }}>Cancel order</p>
-              </button>
-            )}
-
-            {/* Primary action */}
-            {nextAction && (
-              <button
-                type="button"
-                onClick={() => handleStatusUpdate(order.id, nextAction.next)}
-                disabled={actionLoad}
-                style={{
-                  flex: 2,
-                  padding: 13,
-                  background: nextAction.color,
-                  border: "none",
-                  borderRadius: 12,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: actionLoad ? "not-allowed" : "pointer",
-                  opacity: actionLoad ? 0.7 : 1,
-                  transition: "all 0.2s",
-                }}
-              >
-                <p
-                  style={{
-                    color: nextAction.next === "DELIVERED" ? "#fff" : "#1a1a00",
-                  }}
-                >
-                  {actionLoad ? "Updating..." : nextAction.label}
-                </p>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setCancelModal(true)}
+              style={{
+                width: "100%",
+                padding: 13,
+                background: "transparent",
+                border: "0.5px solid rgba(192,57,43,0.3)",
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#c0392b",
+                cursor: "pointer",
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+              }}
+            >
+              Cancel order
+            </button>
           </div>
         )}
 
@@ -819,28 +864,36 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
             </Modal.Header>
 
             <Modal.Body>
-              <p className="mb-2 text-white">Cancel this order?</p>
+              <p className=" text-white">Cancel this order?</p>
               <p
+                className="mt-2 mb-3 "
                 style={{
                   marginBottom: 16,
                   lineHeight: 1.6,
                 }}
               >
-                The buyer will be notified and the payment will be refunded to
-                their r.o.a. wallet.
+                You can only cancel orders that have not been confirmed by the
+                seller yet.
               </p>
 
-              <Form.Label> Reason for cancellation</Form.Label>
-              <Form.Control
-                placeholder="e.g. Item out of stock, unable to fulfil order..."
-                value={cancelNote}
-                onChange={(e) => setCancelNote(e.target.value)}
-                as="textarea"
-                rows={3}
+              <div
                 style={{
-                  resize: "none",
+                  background: "rgba(29,158,117,0.06)",
+                  border: "0.5px solid rgba(29,158,117,0.2)",
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  marginBottom: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
-              />
+              >
+                <Wallet style={{ fontSize: 14, color: "#1D9E75" }} />
+                <p style={{ color: "#1D9E75" }}>
+                  ₦{order?.total?.toLocaleString()} will be refunded to your
+                  r.o.a. wallet
+                </p>
+              </div>
             </Modal.Body>
 
             <Modal.Footer>
@@ -862,19 +915,19 @@ function OrderDetails({ order, onHide, show, loading, handleCancel }) {
                 <button
                   className="p-2 text-center fw-bold"
                   type="button"
-                  onClick={() => handleStatusUpdate("CANCELLED", cancelNote)}
-                  disabled={actionLoad}
+                  onClick={handleCancel}
+                  disabled={cancelLoad}
                   style={{
                     flex: 1,
-
                     background: "rgba(192,57,43,0.15)",
                     border: "0.5px solid rgba(192,57,43,0.3)",
                     borderRadius: 12,
-
+                    cursor: cancelLoad ? "not-allowed" : "pointer",
+                    opacity: cancelLoad ? 0.7 : 1,
                     color: "#c0392b",
                   }}
                 >
-                  {actionLoad ? "Cancelling..." : "Yes, cancel order"}
+                  {cancelLoad ? "Cancelling..." : "Yes, cancel"}
                 </button>
               </div>
             </Modal.Footer>
