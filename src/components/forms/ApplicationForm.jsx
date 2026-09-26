@@ -56,7 +56,7 @@ export function ApplicationForm({
       if (formData.type === "Regular" && !formData.category) {
         newErrors.category = "Please select a category";
       }
-      if (formData.type === "Vehicle") {
+      if (formData.type === "CAR") {
         if (!formData.listingMeta.make) newErrors.make = "Make is required";
         if (!formData.listingMeta.model) newErrors.model = "Model is required";
         if (!formData.listingMeta.year) newErrors.year = "Year is required";

@@ -1,8 +1,120 @@
 import { Card, CardBody } from "react-bootstrap";
-import { FaBath, FaBed, FaHeart, FaStore, FaStoreAlt } from "react-icons/fa";
+import { FaBath, FaBed, FaCar, FaHeart, FaStoreAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { PRODUCT_TYPE_CONFIG } from "./ProductPage";
-import { StarFill } from "react-bootstrap-icons";
+import { StarFill, Star, Building } from "react-bootstrap-icons";
+
+function formatPrice(value) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "₦0";
+  }
+
+  return `₦${amount.toLocaleString("en-NG")}`;
+}
+
+function calculateDiscount(oldPrice, price) {
+  const oldAmount = Number(oldPrice);
+  const currentAmount = Number(price);
+
+  if (
+    !Number.isFinite(oldAmount) ||
+    !Number.isFinite(currentAmount) ||
+    oldAmount <= currentAmount ||
+    oldAmount <= 0
+  ) {
+    return null;
+  }
+
+  return Math.round(((oldAmount - currentAmount) / oldAmount) * 100);
+}
+
+function ProductImage({ product }) {
+  if (product.images?.[0]) {
+    return (
+      <Card.Img
+        src={product.images[0]}
+        alt={product.name || "Product"}
+        loading="lazy"
+      />
+    );
+  }
+  const Icon =
+    product.type === "CAR"
+      ? FaCar
+      : product.type === "REAL_ESTATE"
+        ? Building
+        : FaStoreAlt;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        aspectRatio: "1 / 1",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Icon
+        size={40}
+        style={{
+          color: "rgba(255,255,255,0.1)",
+        }}
+      />
+    </div>
+  );
+}
+
+function Rating({ product }) {
+  const rating = Number(product.ratingAvg ?? 0);
+
+  const ratingCount = Number(product.ratingCount ?? 0);
+
+  if (ratingCount <= 0) {
+    return null;
+  }
+
+  const rounded = Math.max(0, Math.min(5, Math.round(rating)));
+
+  return (
+    <div
+      className="my-2"
+      style={{ display: "flex", alignItems: "center", gap: 3 }}
+    >
+      {[1, 2, 3, 4, 5].map((star) =>
+        star <= rounded ? (
+          <StarFill
+            key={star}
+            size={10}
+            style={{
+              color: "#f3f70b",
+            }}
+          />
+        ) : (
+          <Star
+            key={star}
+            size={10}
+            style={{
+              color: "rgba(255,255,255,0.25)",
+            }}
+          />
+        ),
+      )}
+
+      <span
+        className="ms-1"
+        style={{
+          fontSize: 10,
+          color: "rgba(255,255,255,0.45)",
+        }}
+      >
+        ({ratingCount})
+      </span>
+    </div>
+  );
+}
 
 export default function ProductCard({
   product,
@@ -11,131 +123,157 @@ export default function ProductCard({
   handleAddToCart,
   showWishlist,
   Store,
+  onSelect,
   Shop,
 }) {
   const navigate = useNavigate();
 
-  const productTypeConfig = PRODUCT_TYPE_CONFIG[product.type || "REGULAR"];
+  if (!product) {
+    return null;
+  }
 
-  const discount = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : null;
+  const productTypeConfig =
+    PRODUCT_TYPE_CONFIG[product.type || "REGULAR"] ||
+    PRODUCT_TYPE_CONFIG.REGULAR;
 
-  const lowStock = product.stock < product.lowStock;
-  const outOfStock = product.stock === 0;
+  const discount = calculateDiscount(product.oldPrice, product.price);
+
+  const stock = Number(product.stock);
+
+  const hasStock = Number.isFinite(stock);
+
+  const outOfStock =
+    product.status === "OUT_OF_STOCK" || (hasStock && stock <= 0);
+
+  const lowStockThreshold = Number(
+    product.lowStockThreshold ?? product.lowStock ?? 5,
+  );
+
+  const lowStock = hasStock && stock > 0 && stock <= lowStockThreshold;
+
+  const createdTime = product.createdAt
+    ? new Date(product.createdAt).getTime()
+    : NaN;
 
   const isNew =
-    product.createdAt &&
-    Date.now() - new Date(product.createdAt).getTime() < 7 * 86400000;
+    Number.isFinite(createdTime) &&
+    Date.now() - createdTime < 7 * 24 * 60 * 60 * 1000;
 
-  const isHot = (product.soldCount || 0) >= 20;
+  const isHot = Number(product.soldCount ?? 0) >= 20;
 
-  const isRegular = !product.type || product.type === "REGULAR";
+  const isCar = product.type === "CAR";
+
   const isRealEstate = product.type === "REAL_ESTATE";
 
+  const isRegular = product.type === "REGULAR";
+
+  const meta = product.listingMeta || {};
+
+  // Wishlist click
+  const handleWish = (e) => {
+    e.stopPropagation();
+
+    if (typeof handleWishlist === "function") {
+      handleWishlist(product.id);
+    }
+  };
+
+  // Cart click
+  const handleCart = (e) => {
+    e.stopPropagation();
+
+    if (outOfStock) {
+      return;
+    }
+
+    if (typeof handleAddToCart === "function") {
+      handleAddToCart(product);
+    }
+  };
+
+  //Card click
+  const handleSelect = () => {
+    if (typeof onSelect === "function") {
+      onSelect(product);
+    }
+  };
+
   return (
-    <Card className="product-card">
+    <Card
+      className="product-card"
+      onClick={handleSelect}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        cursor: onSelect ? "pointer" : "default",
+      }}
+    >
       <div style={{ position: "relative" }}>
         {/* Image area */}
-        {product.images?.[0] ? (
-          <Card.Img src={product.images[0]} alt={product.name} loading="lazy" />
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <categoryConfig.Icon
-              style={{ fontSize: 40, color: "rgba(255,255,255,0.08)" }}
-            />
+        <ProductImage product={product} />
+
+        {/* Badges */}
+        {Shop && (
+          <div style={{ position: "absolute", top: 8, left: 8 }}>
+            {discount && (
+              <div
+                className={` p-1 fw-bold text-white mb-2  ${isHot ? "d-none" : "d-inline-block"} `}
+                style={{
+                  background: "#c0392b",
+                  borderRadius: 7,
+                }}
+              >
+                <small>-{discount}%</small>
+              </div>
+            )}
+            {isNew && !discount && !isHot && (
+              <small
+                className="fw-bold text-white p-1"
+                style={{
+                  background: "#1D9E75",
+                  borderRadius: 7,
+                }}
+              >
+                NEW
+              </small>
+            )}
+            {isHot && (
+              <small
+                className="fw-bold text-dark py-1 px-2"
+                style={{
+                  background: "#ccc929",
+                  borderRadius: 7,
+                }}
+              >
+                🔥 HOT
+              </small>
+            )}
           </div>
         )}
 
-        {/* Badges */}
-        <div style={{ position: "absolute", top: 8, left: 8 }}>
-          {Shop && discount && (
-            <>
-              {discount && (
-                <div
-                  className={` p-1 fw-bold text-white mb-2  ${isHot ? "d-none" : "d-inline-block"} `}
-                  style={{
-                    background: "#c0392b",
-                    borderRadius: 7,
-                  }}
-                >
-                  <small>-{discount}%</small>
-                </div>
-              )}
-              {isNew && !discount && (
-                <small
-                  className="fw-bold text-white p-1"
-                  style={{
-                    background: "#1D9E75",
-                    borderRadius: 7,
-                  }}
-                >
-                  NEW
-                </small>
-              )}
-              {isHot && (
-                <div>
-                  {" "}
-                  <small
-                    className="fw-bold text-dark py-1 px-2"
-                    style={{
-                      background: "#ccc929",
-                      borderRadius: 7,
-                    }}
-                  >
-                    🔥 HOT
-                  </small>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
         {/* Out of stock  */}
-        {(Shop && product.status === "OUT_OF_STOCK" && (
+        {Shop && outOfStock && (
           <div
             className="d-flex align-items-center justify-content-center"
             style={{
               position: "absolute",
               inset: 0,
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 1,
             }}
           >
             <p
               className="px-3 py-1 "
               style={{
-                background: "#1a1a1a",
-                border: "0.5px solid #2a2a2a",
+                background: "#151515",
+                color: "#fff",
                 borderRadius: 6,
               }}
             >
               Out of stock
             </p>
           </div>
-        )) ||
-          (Store && outOfStock && (
-            <>
-              <div
-                className="fw-bold text-white p-1 py-0"
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  background: "#f00800",
-                  borderRadius: 7,
-                }}
-              >
-                <small>Low stock</small>
-              </div>
-            </>
-          ))}
+        )}
 
         {/* low stock */}
         {Store && lowStock && (
@@ -145,7 +283,7 @@ export default function ProductCard({
               position: "absolute",
               top: 8,
               right: 8,
-              background: "#f09c00",
+              background: "#d41c16d5",
               borderRadius: 7,
             }}
           >
@@ -154,18 +292,15 @@ export default function ProductCard({
         )}
 
         {/* Wishlist button */}
-        {showWishlist && (
+        {showWishlist && Shop && (
           <div
             className="d-inline-flex d-flex align-items-center ms-2"
             style={{ position: "absolute", top: 8, right: 8 }}
           >
             <div
-              clas
               className={`d-flex align-items-center justify-content-center ${wished ? "wishlist-active" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleWishlist(product.id);
-              }}
+              aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+              onClick={handleWish}
               style={{
                 background: "rgba(22, 22, 22, 0.73)",
                 width: 28,
@@ -175,7 +310,14 @@ export default function ProductCard({
                 color: "#fff",
               }}
             >
-              <FaHeart size={15} />
+              <FaHeart
+                size={15}
+                style={{
+                  fill: wished ? "#f7d932" : "transparent",
+                  stroke: "currentColor",
+                  strokeWidth: wished ? 0 : 20,
+                }}
+              />
             </div>
           </div>
         )}
@@ -184,151 +326,182 @@ export default function ProductCard({
       <CardBody className="py-0">
         {/* Store + Category */}
         {Shop && (
-          <span
-            style={{
-              display: " -webkit-box",
-              WebkitLineClamp: 1,
-              webBoxOrient: "vertical",
-              color: "#c6c92d",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+          <div
+            className="d-flex align-items-center gap-2"
+            style={{ maxWidth: 0 }}
           >
-            <FaStoreAlt className="me-2" /> {product.store?.name}
-          </span>
+            <FaStoreAlt
+              style={{
+                color: "#c9c74c",
+                flexShrink: 0,
+                fontSize: 10,
+              }}
+            />
+
+            <span
+              style={{
+                color: "#c6c92d",
+                overflow: "hidden",
+                fontSize: 10,
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {" "}
+              {product.store?.name || product.storeName || "ROA Store"}
+            </span>
+
+            {product.store?.verified && (
+              <span
+                style={{
+                  color: "#1D9E75",
+                  fontSize: 10,
+                }}
+              >
+                ✓
+              </span>
+            )}
+          </div>
         )}
 
         {/* Name */}
-        <div className="my-2 product-name">{product.name}</div>
+        <div className="my-2 product-name">
+          {product.name || "Untitled product"}
+        </div>
 
         {/* Rating — regular only */}
-        {Shop && isRegular && product.ratingCount > 0 && (
+        {Shop && isRegular && <Rating product={product} />}
+
+        {/* CAR info */}
+        {Shop && isCar && (
           <div
-            className="my-2"
-            style={{ display: "flex", alignItems: "center", gap: 3 }}
+            className="d-flex flex-wrap gap-2 my-3"
+            style={{ color: "#a0a0a0", fontSize: 11 }}
           >
-            {[1, 2, 3, 4, 5].map((s) =>
-              s <= Math.round(product.ratingStars) ? (
-                <StarFill key={s} style={{ fontSize: 10, color: "#f3f70b" }} />
-              ) : (
-                <Star key={s} style={{ fontSize: 10 }} />
-              ),
-            )}
-            <p className="ms-1">({product.ratingCount})</p>
+            {meta.year && <span>{meta.year}</span>}
+
+            {meta.transmission && <span>• {meta.transmission}</span>}
+
+            {meta.mileage && <span>• {meta.mileage} km</span>}
           </div>
         )}
 
-        {/* CAR specs */}
-        {Shop && product.type === "VEHICLE" && product.listingMeta && (
-          <div className="d-flex flex-column gap-3 my-3">
-            {[product.listingMeta.year, product.listingMeta.transmission]
-              .filter(Boolean)
-              .map((spec) => {
-                return (
-                  <p className="fs-5" key={spec}>
-                    {spec}
-                  </p>
-                );
-              })}
-          </div>
-        )}
-
-        {/* REAL ESTATE specs preview */}
-        {Shop && product.type === "REAL_ESTATE" && product.listingMeta && (
-          <div className="d-flex flex-column gap-3 my-3">
-            {product.listingMeta.bedrooms && (
-              <div className="d-flex align-items-center gap-2">
-                <FaBed className="text-white" />{" "}
-                <p className="fs-5"> {product.listingMeta.bedrooms}</p>
-              </div>
+        {/* Property listing */}
+        {Shop && isRealEstate && (
+          <div
+            className="d-flex flex-wrap gap-3 my-3"
+            style={{ color: "#a0a0a0", fontSize: 11 }}
+          >
+            {meta.bedrooms != null && (
+              <span className="d-flex align-items-center gap-1">
+                <FaBed />
+                {meta.bedrooms} bed
+              </span>
             )}
-            {product.listingMeta.bathrooms && (
-              <div className="d-flex align-items-center gap-2">
-                <FaBath className="text-white" />{" "}
-                <p className="fs-5">
-                  {" "}
-                  {product.listingMeta.bathrooms} bathroom
-                  {product.listingMeta.bathrooms !== 1 ? "s" : ""}
-                </p>
-              </div>
+
+            {meta.bathrooms != null && (
+              <span className="d-flex align-items-center gap-1">
+                <FaBath />
+                {meta.bathrooms} bath
+              </span>
             )}
           </div>
         )}
 
         {/* Price */}
-        <div>
+        <div className="d-flex align-items-center flex-wrap gap-2">
           <div className="price">
-            ₦{product.price.toLocaleString()}{" "}
+            {formatPrice(product.price)}
             {isRealEstate &&
               product.listingMeta?.listingType === "For rent" && <>/yr</>}
           </div>
 
-          {Shop &&
-            product.type === "VEHICLE" &&
-            product.listingMeta.negotiable && (
-              <span
-                className="my-2"
-                style={{
-                  position: "absolute",
-                  top: 240,
-                  left: 0,
-                  fontSize: 11,
-                  color: "#d1e2dd",
-                  background: "rgb(29, 158, 117)",
-                  borderRadius: 5,
-                  padding: "2px 7px",
-                }}
-              >
-                Negotiable
-              </span>
-            )}
+          {discount && (
+            <span
+              style={{
+                color: "#a0a0a0",
+                textDecoration: "line-through",
+                fontSize: 10,
+              }}
+            >
+              {formatPrice(product.oldPrice)}
+            </span>
+          )}
+
+          {Shop && isCar && meta.negotiable && (
+            <span
+              className="my-2"
+              style={{
+                position: "absolute",
+                top: 240,
+                left: 0,
+                fontSize: 11,
+                color: "#d1e2dd",
+                background: "rgb(29, 158, 117)",
+                borderRadius: 5,
+                padding: "2px 7px",
+              }}
+            >
+              Negotiable
+            </span>
+          )}
         </div>
 
         {/* stock and status */}
         {Store && (
-          <>
-            <div className="d-flex align-items-center gap-2">
-              <p>Stock:</p> <p>24 units</p>
+          <div
+            className="mt-3 pt-2"
+            style={{
+              borderTop: "1px solid rgba(255, 255, 255, 0.09)",
+            }}
+          >
+            <div className="d-flex justify-content-between">
+              <p>Stock:</p>{" "}
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#fff",
+                }}
+              >
+                {hasStock ? `${stock} units` : "N/A"}
+              </span>
             </div>
-            <div className="d-flex align-items-center gap-2 mt-3">
+            <div className="d-flex justify-content-between mt-2">
               <p>Status:</p>{" "}
               <small
                 className=" "
                 style={{
-                  color: "#61dd0f",
+                  color:
+                    product.status === "ACTIVE"
+                      ? "#61dd0f"
+                      : product.status === "OUT_OF_STOCK"
+                        ? "#f00800"
+                        : "#c9c74c",
                 }}
               >
-                Active
+                {product.status || "ACTIVE"}
               </small>
             </div>
-          </>
+          </div>
         )}
 
         {/* CTA */}
         {(Shop && (
           <button
-            onClick={() => handleAddToCart(product)}
-            disabled={product.status === "OUT_OF_STOCK"}
-            className=" py-1 text-center my-3 d-flex w-100 justify-content-center"
+            onClick={isRegular ? handleCart : handleSelect}
+            disabled={outOfStock}
+            className=" py-2 text-center my-3 w-100 "
             style={{
-              border: `1px solid ${product.status === "OUT_OF_STOCK" ? "#2a2a2a" : productTypeConfig.ctaColor}`,
-              background:
-                product.status === "OUT_OF_STOCK"
-                  ? "#1a1a1ac0"
-                  : productTypeConfig.ctaBg,
-              color:
-                product.status === "OUT_OF_STOCK"
-                  ? "#555"
-                  : productTypeConfig.ctaText,
-              borderRadius: "10px",
-              cursor: product.status === "OUT_OF_STOCK" ? "default" : "pointer",
+              border: `1px solid ${productTypeConfig.ctaColor}`,
+              background: outOfStock ? "#1a1a1ac0" : productTypeConfig.ctaBg,
+              color: outOfStock ? "#555" : productTypeConfig.ctaText,
+              borderRadius: 10,
+              fontSize: 12,
+              cursor: outOfStock ? "not-allowed" : "pointer",
               transition: "all 0.15s",
             }}
           >
-            {product.status === "OUT_OF_STOCK"
-              ? "Out of stock"
-              : productTypeConfig.cta}
+            {outOfStock ? "Out of stock" : productTypeConfig.cta}
           </button>
         )) ||
           (Store && (
@@ -346,12 +519,13 @@ export default function ProductCard({
                   border: "#ffffff96",
                   nav: null,
                 },
-                { a: "Delete", bg: "#f00800de", border: null, nav: null },
+                { a: "Delete", bg: "#f0342dee", border: null, nav: null },
               ].map((cta) => {
                 return !lowStock ? (
                   <button
                     type="button"
                     key={cta.a}
+                    onClick={() => navigate(cta.nav)}
                     className=" py-1  mx-auto my-4 d-flex w-100 justify-content-center "
                     style={{
                       background: cta.bg,

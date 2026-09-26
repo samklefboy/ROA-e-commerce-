@@ -6,7 +6,6 @@
 }
 
 .container-login {
-  background-color:#fff;
   border-radius: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
   position: relative;
@@ -15,36 +14,35 @@
   min-height: 480px;
 }
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
   .container-login {
     width: 456px;
   }
 }
 
-.container-login p{
+.container-login p {
   font-size: 14px;
   line-height: 20px;
   letter-spacing: 0.3px;
   margin: 20px 0;
 }
 
-.container-login span{
+.container-login span {
   font-size: 12px;
 }
 
-.container-login a{
+.container-login a {
   color: #333;
   font-size: 13px;
   text-decoration: none;
   margin: 15px 0 10px;
-
 }
 
-.container-login button{
+.container-login-button {
   background: linear-gradient(135deg, #00e676, #9dc800);
-   box-shadow: 0 8px 28px rgba(0,230,118,0.35);
+  box-shadow: 0 8px 24px rgba(0, 230, 119, 0.295);
   color: #fff;
-  font-size: 11px;
+  font-size: 15px;
   padding: 10px 45px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -54,31 +52,28 @@
   cursor: pointer;
 }
 
-.container-login button.hidden{
+.container-login button.hidden {
   background-color: transparent;
-  border-color: #fff;
 }
 
-.container-login form{
-  background-color: #fff;
+.container-login form {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   padding: 0 40px;
-  height: 100%
+  height: 100%;
 }
 
-.container-login form a{
+.container-login form a {
   line-height: 18px;
 }
 
-.container-login form span{
+.container-login form span {
   line-height: 18px;
 }
 
-.container-login input{
-  background-color: #eee;
+.container-login input {
   border: none;
   margin: 8px 0;
   padding: 10px 15px;
@@ -95,42 +90,44 @@
   transition: all ease-in-out;
 }
 
-.sign-in{
+.sign-in {
   left: 0;
   width: 50%;
   z-index: 2;
 }
 
-.container-login.active .sign-in{
+.container-login.active .sign-in {
   transform: translateX(100%);
 }
 
-.sign-up{
+.sign-up {
   left: 0;
   width: 50%;
   opacity: 0;
   z-index: 1;
 }
 
-.container-login.active .sign-up{
+.container-login.active .sign-up {
   transform: translateX(100%);
   opacity: 1;
   z-index: 5;
   animation: move 0.6s;
 }
 
-@keyframes move{
-  0%, 49.99%{
+@keyframes move {
+  0%,
+  49.99% {
     opacity: 0;
     z-index: 1;
   }
-  50%, 100%{
+  50%,
+  100% {
     opacity: 1;
     z-index: 5;
   }
 }
 
-.toggle-container{
+.toggle-container {
   position: absolute;
   top: 0;
   left: 50%;
@@ -142,12 +139,12 @@
   z-index: 1000;
 }
 
-.container-login.active .toggle-container{
+.container-login.active .toggle-container {
   transform: translateX(-100%);
   border-radius: 0 150px 100px 0;
 }
 
-.toggle{
+.toggle {
   height: 100%;
   background: linear-gradient(135deg, #6fe600, #c8bb00);
   color: #fff;
@@ -159,11 +156,11 @@
   transition: all 0.6s ease-in-out;
 }
 
-.container-login.active .toggle{
+.container-login.active .toggle {
   transform: translateX(50%);
 }
 
-.toggle-panel{
+.toggle-panel {
   position: absolute;
   width: 50%;
   height: 100%;
@@ -178,20 +175,29 @@
   transition: all 0.6s ease-in-out;
 }
 
-.toggle-left{
+.toggle-left {
   transform: translateX(-200px);
 }
 
-.container-login.active .toggle-left{
+.container-login.active .toggle-left {
   transform: translateX(0);
 }
 
-.toggle-right{
+.toggle-right {
   right: 0;
   transform: translateX(0);
 }
 
-.container-login.active .toggle-right{
+.container-login.active .toggle-right {
   transform: translateX(200%);
 }
 
+.first-letter {
+  color: rgb(163, 207, 4);
+}
+.second-letter {
+  color: rgb(196, 250, 1);
+}
+.third-letter {
+  color: rgb(0, 241, 0);
+}

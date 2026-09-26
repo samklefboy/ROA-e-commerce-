@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { motion } from "framer-motion";
-import { container, fadedown } from "../../../../animation";
+import { container, fadedown } from "../../../../utils/animation";
 import { TYPE_CONFIG } from "../Transactions";
 import { FiAlertCircle } from "react-icons/fi";
 import { ChevronRight } from "react-bootstrap-icons";

@@ -195,7 +195,7 @@ export function HowItWorks() {
                     </Col>
                   </Row>
                 </div>
-                <Link to="/get-store">
+                <Link to="/create-store">
                   <button
                     style={{
                       border: "none",

@@ -1,5 +1,5 @@
 import { Container, Row, Col, Stack } from "react-bootstrap";
-import { container, fadeUp } from "../../../animation";
+import { container, fadeUp } from "../../../utils/animation";
 import { motion } from "framer-motion";
 
 const categories = [

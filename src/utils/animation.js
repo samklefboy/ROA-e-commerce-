@@ -16,6 +16,24 @@ export const fadedown = {
   },
 };
 
+export const faderight = {
+  hidden: { opacity: 0, y: -30 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+export const fadeleft = {
+  hidden: { opacity: 0, x: 40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
 export const zoomIn = {
   hidden: { opacity: 0, scale: 0.9 },
   visible: {

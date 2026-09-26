@@ -1,32 +1,53 @@
+// AmountPicker.jsx
 export function AmountPicker({
-  QUICK_TOPUP,
   setAmount,
   amount,
-  QUICK_WITHDRAW,
-  walletBalance,
+  amounts = [],
+  walletBalance = 0,
 }) {
+  const handleAmountSelect = (value) => {
+    if (value === "All") {
+      setAmount(String(walletBalance));
+      return;
+    }
+
+    setAmount(String(value));
+  };
+
+  const isSelected = (value) => {
+    if (value === "All") {
+      return String(amount) === String(walletBalance);
+    }
+
+    return String(amount) === String(value);
+  };
+
   return (
-    <div>
-      <h5>Quick select</h5>
+    <div className="my-5 py-4">
+      <h6>Quick select</h6>
+
       <div className="d-flex flex-wrap gap-4 my-4">
-        {(QUICK_TOPUP || QUICK_WITHDRAW).map((a) => {
+        {amounts.map((value) => {
+          const selected = isSelected(value);
+
           return (
             <button
-              className="px-3 py-2 px-sm-4 py-sm-3"
-              key={a}
-              onClick={() =>
-                setAmount(a === "All" ? String(walletBalance) : String(a))
-              }
+              type="button"
+              key={value}
+              className="px-3 py-2 "
+              onClick={() => handleAmountSelect(value)}
               style={{
                 fontSize: "14px",
                 borderRadius: "18px",
                 fontWeight: 600,
-                border: `1px solid ${amount == a ? "#c9a84c" : ""}`,
-                color: amount == a ? "#ffee00" : "#000",
-                background: amount == a ? "#ffffff23 " : "",
+                border: `1px solid ${selected ? "#c9c14cd8" : "#ffffff20"}`,
+                color: selected ? "#ffee00" : "#fff",
+                background: selected ? "#3d39038a" : "transparent",
               }}
             >
-              {a === "All" ? a : <>₦ {a.toLocaleString()}</>}
+              {value === "All"
+                ? "All"
+                : `₦ ${Number(value).toLocaleString("en-NG")}`}
             </button>
           );
         })}

@@ -36,7 +36,7 @@ export function Price({
   };
 
   const isRegular = formData.type === "REGULAR";
-  const isCar = formData.type === "VEHICLE";
+  const isCar = formData.type === "CAR";
   const isRealEstate = formData.type === "REAL_ESTATE";
 
   const price = parseFloat(formData.price) || 0;

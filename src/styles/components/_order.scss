@@ -1,6 +1,55 @@
+.offcanvas.order-details {
+  backdrop-filter: blur(100px) !important;
+  border: none !important;
+  border-left: 0.5px solid #0ddb2f49 !important;
+  width: 100%;
+  background: radial-gradient(
+    circle,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6
+  ) !important;
+
+  @media (min-width: 550px) {
+    width: 75% !important;
+  }
+
+  @media (min-width: 1000px) and (max-width: 10000px) {
+    width: 720px !important;
+  }
+}
+
 .orders {
   color: #a0a0a0;
-  padding-top: 100px;
+  padding-top: 110px;
+
+  .order_card {
+    border: 1px solid rgba(255, 255, 255, 0.692);
+    border-radius: 18px;
+    background: linear-gradient(
+      135deg,
+      rgba(42, 43, 0, 0.275),
+      rgba(86, 214, 0, 0.26)
+    );
+    color: #fff;
+
+    @media (min-width: 992px) and (max-width: 1399px) {
+      height: 350px;
+    }
+    @media (min-width: 1400px) {
+      height: 380px;
+    }
+  }
 
   input {
     background: transparent;

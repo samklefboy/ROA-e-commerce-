@@ -1,47 +1,25 @@
 import { create } from "zustand";
 
-const DEV_MODE = true;
-const MOCK_STATE = "user";
-
 export const useAuthStore = create((set) => ({
-  fetchUser: async () => {
-    if (DEV_MODE) {
-      let user = null;
-      let shopOwner = null;
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isLoading: true,
 
-      if (MOCK_STATE === "user") {
-        user = {
-          id: "1",
-          name: "samuel Victor",
-          hasShop: false,
-        };
-      } else if (MOCK_STATE === "shopOwner") {
-        shopOwner = {
-          id: "1",
-          name: "samuel Victor",
-          hasShop: true,
-        };
-      }
+  setSession: ({ user, accessToken }) =>
+    set({ user, accessToken, isAuthenticated: true, isLoading: false }),
 
-      set({ user, shopOwner });
-      return;
-    }
+  setUser: (user) => set({ user }),
 
-    try {
-      const res = await API.get("/auth/me");
-      set({ user: res.data.user, loading: false });
-    } catch {
-      set({ user: null, loading: false });
-    }
-  },
+  setAccessToken: (accessToken) => set({ accessToken }),
 
-  login: async (data) => {
-    await API.post("/auth/login", data);
-    await useAuthStore.getState().fetchUser();
-  },
+  setLoading: (isLoading) => set({ isLoading }),
 
-  logout: async () => {
-    await API.post("/auth/logout");
-    set({ user: null });
-  },
+  clearSession: () =>
+    set({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+      isLoading: false,
+    }),
 }));

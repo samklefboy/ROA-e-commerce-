@@ -1,4 +1,6 @@
 .notification {
+  margin-top: 120px;
+
   .notif-tab {
     cursor: pointer;
     position: relative;
@@ -7,14 +9,14 @@
 
   .notif-read {
     position: absolute;
-    left: 0;
-    top: -8%;
+    right: 1%;
+    top: -5%;
     transform: translateY(0%);
   }
 
   .icon-tab {
     position: relative;
-    width: 55;
+    width: 55px;
     aspect-ratio: 1/1;
     border-radius: 18px;
     display: flex;
@@ -24,14 +26,14 @@
 
     .badge-tab {
       position: absolute;
-      width: 23;
+      width: 23px;
       aspect-ratio: 1/1;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      bottom: -2;
-      right: -2;
+      bottom: -2px;
+      right: -2px;
       border: 3px solid #0a1a0a;
     }
   }

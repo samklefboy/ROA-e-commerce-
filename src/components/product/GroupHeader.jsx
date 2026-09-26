@@ -1,6 +1,35 @@
 // accordion header component
-import { GROUP_CONFIG } from "./ProductGroupAccordion";
+import { Building, CarFront } from "react-bootstrap-icons";
 import { FaChevronDown } from "react-icons/fa";
+import { FiShoppingBag } from "react-icons/fi";
+
+// group config
+const GROUP_CONFIG = {
+  REGULAR: {
+    label: "product listing",
+    Icon: FiShoppingBag,
+    color: "#f5f107",
+    bg: "rgba(32, 32, 0, 0.71)",
+    border: "#c2c0426b",
+    emptyMsg: "No shop products found",
+  },
+  CAR: {
+    label: "Vehicle listings",
+    Icon: CarFront,
+    color: "#378ADD",
+    bg: "rgba(0, 11, 22, 0.71)",
+    border: "rgba(55,138,221,0.2)",
+    emptyMsg: "No vehicle listings found",
+  },
+  REAL_ESTATE: {
+    label: "Property listings",
+    Icon: Building,
+    color: "#1D9E75",
+    bg: "rgba(1, 31, 21, 0.71)",
+    border: "rgba(29,158,117,0.2)",
+    emptyMsg: "No property listings found",
+  },
+};
 
 export default function GroupHeader({
   type,
@@ -8,24 +37,21 @@ export default function GroupHeader({
   isOpen,
   onToggle,
   Store,
+  Shop,
   storeFront,
 }) {
   const config = GROUP_CONFIG[type];
 
   return (
     <div
-      className={`py-md-3 ${isOpen ? "sticky-top" : Store ? "group_header_store" : storeFront ? "group_header_storefront" : "group_header"}`}
+      className={`py-md-3  ${isOpen ? "sticky-top" : Store ? "group_header_store" : storeFront ? "group_header_storefront" : "group_header"}`}
       onClick={onToggle}
       style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px 14px",
-        top: Store
-          ? "133px"
-          : storeFront
-            ? "clamp(133px, 30vw, 155px)"
-            : "112px",
+        top: Store ? "133px" : Shop ? "clamp(125px, 19.5vw, 155px)" : "112px",
         zIndex: 1,
         background: isOpen ? config.bg : "#273f27",
         backdropFilter: "blur(2px)",

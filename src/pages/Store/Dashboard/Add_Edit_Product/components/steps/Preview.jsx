@@ -20,7 +20,7 @@ const PRODUCT_TYPE_CONFIG = {
     ctaBg: "#202001e8",
     ctaText: "#fbff00",
   },
-  VEHICLE: {
+  CAR: {
     cta: "Whatsapp seller",
     ctaColor: "#29f7b6",
     ctaBg: "transparent",
@@ -78,7 +78,7 @@ const getChecklist = (formData) => {
     );
   }
 
-  if (formData.type === "VEHICLE") {
+  if (formData.type === "CAR") {
     base.push(
       {
         key: "make",
@@ -128,7 +128,7 @@ export function Preview({ formData, handleSubmit, loading, handleBack }) {
   const allPassed = checklist.every((c) => c.done);
   const passedCount = checklist.filter((c) => c.done).length;
 
-  const isCar = formData.type === "VEHICLE";
+  const isCar = formData.type === "CAR";
   const isRealEstate = formData.type === "REAL_ESTATE";
 
   const price = parseFloat(formData.price) || 0;

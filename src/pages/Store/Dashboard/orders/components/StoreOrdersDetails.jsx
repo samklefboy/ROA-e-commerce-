@@ -1,7 +1,7 @@
 import { Form, Row, Col, Container, Offcanvas, Modal } from "react-bootstrap";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { fadedown, container } from "../../../../../animation";
+import { fadedown, container } from "../../../../../utils/animation";
 import OrderStatusBadge from "./OrderStatusBadge";
 import OrderTimeline from "../components/OrderTimeline";
 import { Lock, Whatsapp, X } from "react-bootstrap-icons";

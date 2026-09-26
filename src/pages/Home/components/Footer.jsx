@@ -1,29 +1,25 @@
 import { Container, Row, Col } from "react-bootstrap";
-import {
-  FaInstagram,
-  FaLinkedin,
-  FaTwitter,
-  FaTiktok,
-  FaWhatsapp,
-} from "react-icons/fa";
+import { FaInstagram, FaLinkedin, FaTiktok, FaWhatsapp } from "react-icons/fa";
 
 export const Footer = () => {
   return (
     <>
       <div
         style={{
-          background: "#292727bd",
-          color: "rgba(194, 194, 194, 0.83)",
-          borderTop: "1px solid rgba(255, 238, 0, 0.575)",
+          background: "#01160ada",
+          borderTop: "1px solid rgba(21, 255, 0, 0.18)",
         }}
       >
         <Container>
-          <div className="py-5 mx-auto about px-3 px-sm-0">
-            <h1 style={{ color: "rgb(255, 238, 0)" }}>R . O . A .</h1>
+          <div className="py-4 mx-auto about ">
+            <h3 style={{ color: "rgb(255, 238, 0)" }}>R . O . A </h3>
 
-            <h6 style={{ color: "rgb(255, 238, 0)", paddingTop: "7px" }}>
+            <p
+              className="mb-2 mt-1"
+              style={{ color: "rgb(255, 238, 0)", paddingTop: "7px" }}
+            >
               REACH. OWN. ACHIEVE.
-            </h6>
+            </p>
 
             <p>
               A premium e-commerce platform built for sellers who thinks
@@ -31,9 +27,11 @@ export const Footer = () => {
               find your market, sell everywhere.
             </p>
 
-            <Row g-5 className="mt-4 g-5">
+            <Row className=" mt-3 g-4">
               <Col>
-                <h6 style={{ color: "rgb(255, 238, 0)" }}>PLATFORM</h6>
+                <h6 className="mb-2" style={{ color: "#ffee00" }}>
+                  PLATFORM
+                </h6>
                 <div className="d-flex flex-column gap-2">
                   <a href="">For Sellers</a>
                   <a href="">For Buyers</a>
@@ -45,7 +43,9 @@ export const Footer = () => {
               </Col>
 
               <Col>
-                <h6 style={{ color: "rgb(255, 238, 0)" }}>COMPANY</h6>
+                <h6 className="mb-2" style={{ color: "rgb(255, 238, 0)" }}>
+                  COMPANY
+                </h6>
                 <div className="d-flex flex-column gap-2">
                   <a href="">About R.O.A.</a>
                   <a href="">Blog</a>
@@ -55,7 +55,9 @@ export const Footer = () => {
               </Col>
 
               <Col>
-                <h6 style={{ color: "rgb(255, 238, 0)" }}>LEGAL</h6>
+                <h6 className="mb-2" style={{ color: "rgb(255, 238, 0)" }}>
+                  LEGAL
+                </h6>
                 <div className="d-flex flex-column gap-2">
                   <a href="">Privacy Policy</a>
                   <a href="">Terms of Use</a>
@@ -67,7 +69,7 @@ export const Footer = () => {
         </Container>
       </div>
 
-      <footer className="bg-black py-3">
+      <footer className=" py-3" style={{ background: "#000a05" }}>
         <Container>
           <div
             className="justify-content-center justify-content-sm-between"
@@ -81,7 +83,7 @@ export const Footer = () => {
             <span
               style={{
                 color: "rgba(255, 255, 255, 0.29)",
-                fontSize: "clamp(15px, 5px + 1vw, 22px)",
+                fontSize: 15,
               }}
             >
               © 2026 R.O.A. · Powering local stores online.

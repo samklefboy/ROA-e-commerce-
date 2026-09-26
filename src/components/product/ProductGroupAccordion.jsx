@@ -1,36 +1,8 @@
 // components/ProductGroupAccordion.jsx
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import ProductGroup from "./ProductGroup";
 import { FiShoppingBag } from "react-icons/fi";
 import { Building, CarFront } from "react-bootstrap-icons";
-
-// group config
-export const GROUP_CONFIG = {
-  REGULAR: {
-    label: "product listing",
-    Icon: FiShoppingBag,
-    color: "#f5f107",
-    bg: "rgba(32, 32, 0, 0.71)",
-    border: "#c2c0426b",
-    emptyMsg: "No shop products found",
-  },
-  VEHICLE: {
-    label: "Vehicle listings",
-    Icon: CarFront,
-    color: "#378ADD",
-    bg: "rgba(0, 11, 22, 0.71)",
-    border: "rgba(55,138,221,0.2)",
-    emptyMsg: "No vehicle listings found",
-  },
-  REAL_ESTATE: {
-    label: "Property listings",
-    Icon: Building,
-    color: "#1D9E75",
-    bg: "rgba(1, 31, 21, 0.71)",
-    border: "rgba(29,158,117,0.2)",
-    emptyMsg: "No property listings found",
-  },
-};
 
 // ---- MAIN EXPORT ----
 export default function ProductGroupAccordion({
@@ -41,6 +13,7 @@ export default function ProductGroupAccordion({
   showWishlist,
   Shop,
   Store,
+  handleAddToCart,
   storeFront,
   loading,
   activeFilterCount,
@@ -48,42 +21,56 @@ export default function ProductGroupAccordion({
   loadingMore,
   observerRef,
   hasMore,
+  totalProducts,
   count,
   selectedCategory,
 }) {
-  const hasAny = sorted.length > 0;
+  const hasAny = totalProducts > 0;
 
   // separate products into groups — useMemo
   const groups = useMemo(
     () => ({
       REGULAR: sorted.filter((p) => !p.type || p.type === "REGULAR"),
-      VEHICLE: sorted.filter((p) => p.type === "VEHICLE"),
+      CAR: sorted.filter((p) => p.type === "CAR"),
       REAL_ESTATE: sorted.filter((p) => p.type === "REAL_ESTATE"),
     }),
     [sorted],
   );
 
-  if (!hasAny) return null;
-
   return (
     <div>
-      {/* Expand/collapse all controls */}
-
       {/* Results count */}
       {count && (
-        <h6 className="my-5 mb-4">
-          {sorted.length} listing{sorted.length !== 1 ? "s" : ""}
-        </h6>
+        <div className="d-flex justify-content-between align-items-center my-5 mb-4">
+          <p>
+            {typeof totalProducts === "number"
+              ? totalProducts.toLocaleString("en-NG")
+              : sorted.length.toLocaleString("en-NG")}{" "}
+            {totalProducts === 1 ? "product" : "products"}
+          </p>
+
+          {activeFilterCount > 0 && (
+            <span
+              style={{
+                fontSize: 11,
+                color: "#c9c74c",
+              }}
+            >
+              {activeFilterCount} listing{activeFilterCount === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
       )}
 
       {/* REGULAR — shop products */}
       <ProductGroup
         type={"REGULAR"}
         sorted={groups.REGULAR}
-        defaultOpen={true}
+        defaultOpen={false}
         selectProduct={selectProduct}
         wished={wished}
         handleWishlist={handleWishlist}
+        handleAddToCart={handleAddToCart}
         showWishlist={showWishlist}
         Store={Store}
         Shop={Shop}
@@ -91,19 +78,22 @@ export default function ProductGroupAccordion({
         loading={loading}
         activeFilterCount={activeFilterCount}
         clearFilters={clearFilters}
+        totalProducts={totalProducts}
         loadingMore={loadingMore}
         observerRef={observerRef}
         hasMore={hasMore}
         storeFront={storeFront}
       />
 
-      {/* VEHICLE — vehicle listings */}
+      {/* CAR — vehicle listings */}
       <ProductGroup
-        type={"VEHICLE"}
-        sorted={groups.VEHICLE}
-        defaultOpen={true}
+        type={"CAR"}
+        sorted={groups.CAR}
+        handleAddToCart={handleAddToCart}
+        defaultOpen={false}
         selectProduct={selectProduct}
         wished={wished}
+        totalProducts={totalProducts}
         selectedCategory={selectedCategory}
         handleWishlist={handleWishlist}
         showWishlist={showWishlist}
@@ -122,7 +112,7 @@ export default function ProductGroupAccordion({
       <ProductGroup
         type={"REAL_ESTATE"}
         sorted={groups.REAL_ESTATE}
-        defaultOpen={true}
+        defaultOpen={false}
         selectProduct={selectProduct}
         wished={wished}
         handleWishlist={handleWishlist}
@@ -130,6 +120,7 @@ export default function ProductGroupAccordion({
         selectedCategory={selectedCategory}
         Store={Store}
         Shop={Shop}
+        totalProducts={totalProducts}
         loading={loading}
         storeFront={storeFront}
         activeFilterCount={activeFilterCount}

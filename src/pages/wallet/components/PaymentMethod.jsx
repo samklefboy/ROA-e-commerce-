@@ -1,27 +1,56 @@
 import { Row, Col, Stack } from "react-bootstrap";
+import { Bank, CreditCard, Link45deg } from "react-bootstrap-icons";
 
-export function PaymentMethod({ method, setMethod, PAYMENT_METHOD }) {
+const PAYMENT_METHODS = [
+  {
+    id: "card",
+    Icon: CreditCard,
+    color: "#b7b921",
+    label: "Debit card",
+    sub: "Visa, Mastercard",
+  },
+  {
+    id: "transfer",
+    Icon: Bank,
+    color: "#9d2bc0",
+    label: "Bank transfer",
+    sub: "Instant bank transfer",
+  },
+  {
+    id: "ussd",
+    Icon: Link45deg,
+    color: "#999797",
+    label: "USSD",
+    sub: "No internet needed",
+  },
+];
+
+export function PaymentMethod({ method, setMethod }) {
   return (
-    <div style={{ margin: "110px 0" }}>
-      <h5 className="mb-4">Pay with</h5>
+    <div className="my-5 py-4">
+      <h6 className="mb-4">Pay with</h6>
 
-      <Row className="g-5">
-        {PAYMENT_METHOD.map((m) => {
+      <Row className="g-4 g-md-5">
+        {PAYMENT_METHODS.map((m) => {
           return (
-            <Col key={m.id} className="col-auto" xs={6}>
+            <Col key={m.id} className="col-auto " xs={6} md={4}>
               <div
-                className="p-3"
+                className="p-3 py-4"
                 onClick={() => setMethod(m.id)}
                 style={{
-                  background: "#4aa14a3b",
-                  border: `0.5px solid ${method == m.id ? "#c9a84c" : ""}`,
+                  background: method === m.id ? "#4aa14a55" : "#4aa14a20",
+                  border: `0.5px solid ${method == m.id ? "#dbc712" : "#ffffff15"}`,
                   borderRadius: "22px",
+                  cursor: "pointer",
                 }}
               >
                 <Stack className="text-center">
-                  <h2 className="pt-3">{m.Icon}</h2>
-                  <h3 className="my-4 fw-bold text-white">{m.label}</h3>
-                  <h6>{m.sub}</h6>
+                  <m.Icon
+                    className="mx-auto"
+                    style={{ color: m.color, fontSize: 26 }}
+                  />
+                  <h6 className="my-3 my-lg-4 text-white">{m.label}</h6>
+                  <p>{m.sub}</p>
                 </Stack>
               </div>
             </Col>

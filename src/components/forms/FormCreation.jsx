@@ -36,7 +36,7 @@ export default function FormCreation({
 
   const handleBack = () => {
     if (
-      (formData.type === "Vehicle" && step === 5) ||
+      (formData.type === "CAR" && step === 5) ||
       (formData.type === "Real_Estate" && step === 5)
     ) {
       setStep === 3;

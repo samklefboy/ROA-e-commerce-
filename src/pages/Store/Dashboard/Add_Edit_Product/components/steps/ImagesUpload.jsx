@@ -13,7 +13,7 @@ import { Check } from "react-bootstrap-icons";
 
 const MAX_IMAGES = {
   REGULAR: 3,
-  VEHICLE: 10,
+  CAR: 10,
   REAL_ESTATE: 10,
 };
 
@@ -458,7 +458,7 @@ export function ImagesUpload({
               }}
             >
               📸 Tips for great{" "}
-              {formData.type === "VEHICLE"
+              {formData.type === "CAR"
                 ? "vehicle"
                 : formData.type === "REAL_ESTATE"
                   ? "property"

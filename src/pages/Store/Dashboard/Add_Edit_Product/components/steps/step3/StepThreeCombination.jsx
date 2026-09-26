@@ -23,7 +23,7 @@ export function StepThreeCombination({
         />
       )}
 
-      {formData.type === "VEHICLE" && (
+      {/*    {formData.type === "CAR" && (
         <VehicleDetails
           setStep={setStep}
           handleChangeListingMeta={handleChangeListingMeta}
@@ -32,7 +32,7 @@ export function StepThreeCombination({
           validateStep={validateStep}
           handleBack={handleBack}
         />
-      )}
+      )} 
 
       {formData.type === "REAL_ESTATE" && (
         <RealEstateDetails
@@ -43,7 +43,7 @@ export function StepThreeCombination({
           validateStep={validateStep}
           handleBack={handleBack}
         />
-      )}
+      )} */}
     </>
   );
 }

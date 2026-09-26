@@ -1,12 +1,10 @@
-import { Button, Offcanvas, Container, Row, Col, Image } from "react-bootstrap";
+import { Offcanvas, Container, Row, Col, Image } from "react-bootstrap";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import axios from "axios";
 import { PRODUCT_TYPE_CONFIG } from "./ProductPage";
 import NotFoundState from "./NotFoundState";
 import { motion } from "framer-motion";
-import { container, fadedown } from "../../animation";
+import { container, fadedown } from "../../utils/animation";
 import {
-  BorderLeft,
   Building,
   Calendar,
   CarFront,
@@ -30,13 +28,19 @@ import {
   FaStore,
 } from "react-icons/fa";
 import { FiRefreshCcw, FiTruck } from "react-icons/fi";
+import api from "../../services/api";
 
-export default function ProductDetails({ show, product, onClose, navigate }) {
+export default function ProductDetails({
+  show,
+  product,
+  onClose,
+  navigate,
+  wished,
+}) {
   const panelRef = useRef(null);
 
   // ---- states ----
   const [activeImage, setActiveImage] = useState(0);
-  const [wished, setWished] = useState(product.isWishlisted || false);
   const [selectedVars, setSelectedVars] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [expanded, setExpanded] = useState(false);
@@ -73,7 +77,7 @@ export default function ProductDetails({ show, product, onClose, navigate }) {
     const fetchReviews = async () => {
       try {
         setReviewLoading(true);
-        const { data } = await axios.get(`/api/products/${product.id}/reviews`);
+        const { data } = await api.get(`/api/products/${product.id}/reviews`);
         setReviews(data);
       } catch (err) {
         console.error(err);
@@ -138,7 +142,7 @@ export default function ProductDetails({ show, product, onClose, navigate }) {
     if (!allSelected || isOutOfStock) return;
     try {
       setCartLoading(true);
-      await axios.post("/api/cart", {
+      await api.post("/api/cart", {
         productId: product.id,
         quantity,
         variant: matchedVariant ? matchedVariant.combination : null,
@@ -164,11 +168,10 @@ export default function ProductDetails({ show, product, onClose, navigate }) {
     if (!allSelected || isOutOfStock || cartLoading) return;
     try {
       setCartLoading(true);
-      await axios.post("/api/cart", {
+      await api.post("/api/cart/items", {
         productId: product.id,
         quantity,
-        variant: Object.keys(selectedVars).length > 0 ? selectedVars : null,
-        //  variant:      matchedVariant ? matchedVariant.combination : null,
+        variant: matchedVariant ? matchedVariant.combination : null,
         variantId: matchedVariant?.id || null,
       });
       setCartSuccess(true);
@@ -180,23 +183,12 @@ export default function ProductDetails({ show, product, onClose, navigate }) {
     }
   }, [
     product.id,
-    selectedVars,
     quantity,
     matchedVariant,
     allSelected,
     isOutOfStock,
     cartLoading,
   ]);
-
-  // ---- handleWishlistToggle — useCallback ----
-  const handleWishlist = useCallback(async () => {
-    try {
-      setWished((prev) => !prev);
-      await axios.post("/api/wishlist/toggle", { productId: product.id });
-    } catch (err) {
-      setWished((prev) => !prev);
-    }
-  }, [product.id]);
 
   // ---- handleWhatsApp — useCallback ----
   const handleWhatsApp = useCallback(() => {
@@ -227,7 +219,7 @@ export default function ProductDetails({ show, product, onClose, navigate }) {
   if (!product) return null;
 
   const isRegular = product.type === "REGULAR" || !product.type;
-  const isCar = product.type === "VEHICLE";
+  const isCar = product.type === "CAR";
   const isRealEstate = product.type === "REAL_ESTATE";
 
   const tabs = [

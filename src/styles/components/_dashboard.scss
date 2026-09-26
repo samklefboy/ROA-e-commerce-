@@ -9,10 +9,11 @@
   border-radius: 12px;
 }
 
-.nav_bar {
-  @media (min-width: 1400px) and (max-width: 1700px) {
-    padding-left: 100px;
-  }
+.nav-scroll {
+  background: #058f333a;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-bottom: 1px solid #a5c70e65;
 }
 
 .dashboard {
@@ -22,26 +23,10 @@
   display: flex;
   gap: 0;
 
-  .side_bar {
-    cursor: pointer;
-    background: #058f333a;
-    backdrop-filter: blur(30px);
-
-    .icon {
-      &:hover {
-        color: #eeff02;
-      }
-    }
-  }
-
-  .alert {
-    border: 1px solid #f89500 !important;
-    background: #4e30038e !important;
-  }
-
   .earning_card {
-    background: linear-gradient(45deg, #1e660cc0, #51ff0086);
-    border-radius: 20px;
+    background: linear-gradient(135deg, #566e0062, #007a1a59);
+    border: 0.5px solid #196d00c0;
+    border-radius: 16px;
   }
 
   .dashboard_body {
@@ -51,12 +36,21 @@
   }
 
   .top_products {
-    background: #7df0b131;
-    backdrop-filter: blur(80px);
-    border: 0.5px solid #7df0b1c0;
-    width: clamp(110px, 25px + 11vw, 150px);
+    background: #7df0b11e;
+    border: 0.5px solid #ffffff1e;
+    border-radius: 12px;
+    width: 135px;
 
     > div h6 {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  .top-products {
+    h6 {
       display: -webkit-box;
       -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;

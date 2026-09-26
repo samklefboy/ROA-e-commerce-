@@ -48,7 +48,7 @@ export function ProductType({
               a: "Vehicle Listing",
               b: "Vehicles for sale, cars, buses, trucks, motorcycles and more...",
               c: "Buyer contacts you directly",
-              value: "VEHICLE",
+              value: "CAR",
               key: "Vehicle",
             },
             {
@@ -86,7 +86,7 @@ export function ProductType({
                             color:
                               ty.value === "REGULAR"
                                 ? "#f3489d"
-                                : ty.value === "VEHICLE"
+                                : ty.value === "CAR"
                                   ? "#57c1cf"
                                   : "#c3ff20",
                             fontSize: "clamp(20px,  5vw, 35px)",

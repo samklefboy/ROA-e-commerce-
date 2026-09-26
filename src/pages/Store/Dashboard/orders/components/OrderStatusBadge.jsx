@@ -27,11 +27,11 @@ const ORDER_STATUS_CONFIG = {
 
   IN_DELIVERY: {
     label: "In delivery",
-    color: "#E89A0B",
-    bg: "rgba(232,154,11,0.12)",
-    border: "rgba(232,154,11,0.3)",
+    color: "#ebbd40",
+    bg: "#c496171c",
+    border: "#e0ac1b38",
     Icon: TruckFront,
-    dot: "#E89A0B",
+    dot: "#ec68ba",
   },
   DELIVERED: {
     label: "Delivered",
@@ -64,19 +64,17 @@ function OrderStatusBadge({ status }) {
 
   return (
     <span
-      className="d-inline-flex align-items-center gap-2 px-2  px-sm-3  px-md-3 "
+      className="d-inline-flex align-items-center gap-2 px-2  px-sm-3  px-md-3 py-1"
       style={{
-        fontSize: "clamp(10px, 1px + 4vw, 13px)",
         fontWeight: 600,
         color: config.color,
-        background: config.bg,
-        border: `0.5px solid ${config.border}`,
         borderRadius: 20,
         whiteSpace: "nowrap",
+        fontSize: 13,
       }}
     >
       <config.Icon />
-      <p style={{ color: config.color }}>{config.label}</p>
+      {config.label}
     </span>
   );
 }

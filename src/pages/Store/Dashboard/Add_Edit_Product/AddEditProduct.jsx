@@ -5,7 +5,7 @@ import FormCreation from "../../../../components/forms/FormCreation";
 
 export default function AddEditProduct() {
   const [formData, setFormData] = useState({
-    type: "",
+    type: "REGULAR",
 
     //step 2
     name: "",
@@ -14,47 +14,47 @@ export default function AddEditProduct() {
     keywords: [],
 
     //step 3
-    category: "",
-    gender: "",
-    brand: "",
-    origin: "",
-    isOrganic: false,
-    warrantyDuration: "",
-    deliveryOptions: [],
-    deliveryTime: "",
+    //  category: "",
+    // gender: "",
+    //brand: "",
+    //origin: "",
+    //isOrganic: false,
+    //warrantyDuration: "",
+    //deliveryOptions: [],
+    //deliveryTime: "",
 
     //step 3b car
-    listingMeta: {
-      location: "",
+    //listingMeta: {
+    //   location: "",
 
-      //vehicle fields
-      make: "",
-      model: "",
-      year: "",
-      mileage: "",
-      transmission: "",
-      fuel: "",
-      color: "",
-      bodyType: "",
-      features: [],
-      negotiable: false,
-      contactMethod: [],
+    //vehicle fields
+    //  make: "",
+    // model: "",
+    //year: "",
+    //mileage: "",
+    //transmission: "",
+    //fuel: "",
+    //color: "",
+    //bodyType: "",
+    //  features: [],
+    //   negotiable: false,
+    //      contactMethod: [],
 
-      //property fields
-      listingType: "",
-      propertyType: "",
-      bedrooms: "",
-      bathrooms: 1,
-      toilets: 1,
-      furnished: "",
-      floor: "",
-      sizeInSqm: "",
-      amenities: [],
-      address: "",
-      hideExactAddress: false,
-      agencyFee: "",
-      cautionFee: "",
-    },
+    //property fields
+    //      listingType: "",
+    //     propertyType: "",
+    //      bedrooms: "",
+    //   bathrooms: 1,
+    // toilets: 1,
+    // furnished: "",
+    // floor: "",
+    // sizeInSqm: "",
+    // amenities: [],
+    // address: "",
+    // hideExactAddress: false,
+    // agencyFee: "",
+    // cautionFee: "",
+    // },
 
     //step 4
     variants: {},

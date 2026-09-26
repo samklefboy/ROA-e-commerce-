@@ -5,7 +5,7 @@ import { STATUS_CONFIG } from "./GroupedTransaction";
 import { Check, Copy, X } from "react-bootstrap-icons";
 import { formatTime } from "./GroupedTransaction";
 import { useState } from "react";
-import { zoomIn } from "../../../../animation";
+import { zoomIn } from "../../../../utils/animation";
 import { FaDownload } from "react-icons/fa";
 
 export default function TransactionDetail({ txn, onClose }) {

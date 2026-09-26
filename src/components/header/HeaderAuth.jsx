@@ -101,29 +101,34 @@ const HeaderAuth = () => {
             <div className="d-flex align-items-center justify-content-between">
               <div className="d-flex align-items-center gap-3 ">
                 {" "}
-                <h6>My Balance(NGN)</h6>
-                <div
+                <p>My Balance(NGN)</p>
+                <p
                   onClick={() => setView((p) => !p)}
                   style={{ cursor: "pointer" }}
                 >
-                  {view ? <EyeSlash size={18} /> : <Eye size={18} />}
-                </div>
+                  {view ? <EyeSlash size={20} /> : <Eye size={20} />}
+                </p>
               </div>
               <div className="text-end">
                 <Link to="/transactions">
-                  <h6>View all transactions</h6>
+                  <p>View all transactions</p>
                 </Link>
               </div>
             </div>
             <div className="  my-4 my-md-5">
               {view ? (
-                <h1 className="fs-1 fw-bolder text-white">***</h1>
+                <h1
+                  className="fs-1 fw-bolder text-white"
+                  style={{ letterSpacing: 4, fontFamily: "Syne" }}
+                >
+                  ***
+                </h1>
               ) : (
                 <h1
                   className="fs-1 fw-bolder text-white"
-                  style={{ letterSpacing: 4 }}
+                  style={{ letterSpacing: 4, fontFamily: "Syne" }}
                 >
-                  ₦ 122,537. <span style={{ fontSize: "17px" }}>24</span>
+                  ₦
                 </h1>
               )}
             </div>
@@ -142,7 +147,7 @@ const HeaderAuth = () => {
                 </button>
               </Link>
 
-              <Link to="/withdraw" className="w-100">
+              <Link to="/wallet/withdraw" className="w-100">
                 <button
                   className="text-light text-center w-100 p-2  "
                   style={{
@@ -283,7 +288,7 @@ const HeaderAuth = () => {
 
       {!user && (
         <Link to="/login">
-          <button className="login-btn">Login</button>
+          <button className="login-btn py-0 px-4">Login</button>
         </Link>
       )}
     </>

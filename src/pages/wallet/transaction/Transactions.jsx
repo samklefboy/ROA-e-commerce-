@@ -1,6 +1,7 @@
 import { Container } from "react-bootstrap";
 import { useNavigate } from "react-router";
-import { FaArrowLeft, FaDownload, FaShoppingBag } from "react-icons/fa";
+import { FaArrowLeft, FaShoppingBag } from "react-icons/fa";
+import axios from "axios";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { SummaryCard } from "./components/SummaryCard";
 import { SearchBar } from "./components/Searchbar";

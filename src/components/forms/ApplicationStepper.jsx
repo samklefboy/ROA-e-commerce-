@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 
 const STEPS_BY_TYPE = {
-  REGULAR: [1, 2, 3, 4, 5, 6, 7],
-  VEHICLE: [1, 2, 3, 5, 6, 7],
-  REAL_ESTATE: [1, 2, 3, 5, 6, 7],
+  REGULAR: [/*1,*/ 2, 3, 4, 5, 6, 7],
+  //  CAR: [1, 2, 3, 5, 6, 7],
+  // REAL_ESTATE: [1, 2, 3, 5, 6, 7],
 };
 
 export function ApplicationStepper({ step, setStep, addProduct, formData }) {

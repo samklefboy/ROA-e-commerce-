@@ -1,12 +1,20 @@
 import { useNavigate } from "react-router";
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2,
+  }).format(Number(value) || 0);
+};
+
 export function SummaryCard({ summary, summaryLoading }) {
   const navigate = useNavigate();
 
   return (
     <div
-      className=" px-3 px-sm-4 my-5"
+      className=" px-3 px-sm-4 my-5  px-lg-5"
       style={{
         background: "linear-gradient(135deg, #566e0062, #007a1a59)",
         border: "0.5px solid #196d00c0",
@@ -37,8 +45,7 @@ export function SummaryCard({ summary, summaryLoading }) {
               color: "#facc15",
             }}
           >
-            {" "}
-            {summaryLoading ? "—" : `₦${summary?.balance.toLocaleString()}`}
+            {formatCurrency(summaryLoading ? "—" : summary.balance)}
           </span>
         </div>
 
@@ -120,7 +127,7 @@ export function SummaryCard({ summary, summaryLoading }) {
                     color: s.color,
                   }}
                 >
-                  {summaryLoading ? "—" : `₦${s.amount.toLocaleString()}`}.00
+                  {formatCurrency(summaryLoading ? "—" : s.amount)}
                 </span>
 
                 <p>

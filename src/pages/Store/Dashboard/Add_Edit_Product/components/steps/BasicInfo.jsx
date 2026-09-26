@@ -13,12 +13,7 @@ import { motion } from "framer-motion";
 
 const CONDITIONS = {
   REGULAR: ["Brand new", "Fairly used", "Refurbished"],
-  VEHICLE: [
-    "Brand new",
-    "Foreign used (Tokunbo)",
-    "Nigerian used",
-    "Fairly used",
-  ],
+  CAR: ["Brand new", "Foreign used (Tokunbo)", "Nigerian used", "Fairly used"],
   REAL_ESTATE: ["New build", "Old build", "Renovated"],
 };
 
@@ -88,7 +83,7 @@ export function BasicInfo({
               type="text"
               required
               placeholder={
-                formData.type === "VEHICLE"
+                formData.type === "CAR"
                   ? "e.g. 2019 Toyota Camry LE Sedan — Black"
                   : formData.type === "REAL_ESTATE"
                     ? "e.g. 3 Bedroom Furnished Flat — Lekki Phase 1"
@@ -108,7 +103,7 @@ export function BasicInfo({
               </p>
 
               <div>
-                {formData.type === "Vehicle"
+                {formData.type === "CAR"
                   ? [
                       {
                         key: "Vehicle",
@@ -178,7 +173,7 @@ export function BasicInfo({
               </p>
 
               <Row className=" mt-2">
-                {(formData.type === "Vehicle"
+                {(formData.type === "CAR"
                   ? [
                       "Vehicle history",
                       "Service records",

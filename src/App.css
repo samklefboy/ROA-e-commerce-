@@ -1,36 +1,51 @@
 a {
   text-decoration: none;
-  color:#a0a0a0 !important ;
+  color: #a0a0a0 !important ;
 }
 
-p{
+p {
   line-height: 20px;
   margin: 0;
-   color: #a0a0a0
+  color: #a0a0a0;
 }
 
-h1,h2,h3,h4,h5,h6 {
-  line-height: 22px ;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 24px;
   margin: 0 !important;
   padding: 0 !important;
   color: #a0a0a0;
 }
 
-
-
 body {
-  background: radial-gradient(circle,   #05270af6 ,#001a04,#05270af6 ,#001a04, #05270af6 ,#001a04, #05270af6 ,#001a04, #05270af6 ,#001a04, #05270af6 ,#001a04,#05270af6 ,#001a04,#05270af6 ,#001a04) !important;
+  background: radial-gradient(
+    circle,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04,
+    #05270af6,
+    #001a04
+  ) !important;
   font-family: "outfit", sans-serif;
   font-optical-sizing: auto;
   font-style: normal;
   font-size: 0.97rem;
-  min-height:100vh; 
+  min-height: 100vh;
   scrollbar-width: 8px !important;
   color: #dadada !important ;
 }
-
-
-
-
-
-

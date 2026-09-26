@@ -7,44 +7,20 @@ export function FilterTabs({
   activeFilter,
 }) {
   return (
-    <div
-      className=" filter-tab d-flex gap-4 gap-lg-4"
-      style={{ marginTop: "150px" }}
-    >
+    <div className=" filter-tab d-flex gap-4 gap-lg-4 my-5">
       {FILTERS.map((f) => {
+        const count = filterCounts[f.key] || 0;
+        const isActive = activeFilter === f.key;
         return (
-          <div
+          <button
+            type="button"
             onClick={() => setActiveFilter(f.key)}
             key={f.key}
-            className=" p-4 py-2"
-            style={{
-              cursor: "pointer",
-              borderRadius: "25px",
-              border:
-                activeFilter === f.key
-                  ? "0.5px solid #facc15"
-                  : "0.5px solid #fff",
-              background: activeFilter === f.key ? "#352b02" : "",
-              color: activeFilter === f.key ? "#facc15" : "",
-            }}
+            className={`px-3 py-1 d-flex filter-button align-items-center gap-2  ${isActive ? "active" : ""}`}
           >
-            <Stack
-              className="align-items-center"
-              direction="horizontal"
-              gap={3}
-            >
-              {f.label}
-
-              {FILTERS.types && (
-                <div
-                  className="p-2"
-                  style={{ background: "#facc15", borderRadius: "50%" }}
-                >
-                  <p>{filterCounts[f.key] || 0}</p>
-                </div>
-              )}
-            </Stack>
-          </div>
+            {f.label}
+            <span>{count && <> {filterCounts[f.key] || 0}</>}</span>
+          </button>
         );
       })}
     </div>

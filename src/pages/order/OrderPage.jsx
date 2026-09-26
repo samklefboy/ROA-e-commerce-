@@ -1,41 +1,16 @@
-import {
-  Container,
-  Row,
-  Col,
-  Offcanvas,
-  Form,
-  FormCheck,
-} from "react-bootstrap";
-import {
-  FaArrowLeft,
-  FaSearch,
-  FaStar,
-  FaStore,
-  FaShoppingCart,
-  FaInstagram,
-  FaLinkedin,
-  FaTwitter,
-  FaTiktok,
-  FaWhatsapp,
-  FaChevronDown,
-  FaShoppingBag,
-} from "react-icons/fa";
-import { Slider } from "./components/OrderPageSlider";
+import { Container, Row, Col, Form } from "react-bootstrap";
+import { FaSearch, FaShoppingBag, FaStore } from "react-icons/fa";
 import OrderDetails from "./components/OrderDetails";
+import OrderStatusBadge from "../Store/Dashboard/orders/components/OrderStatusBadge";
 import { Footer } from "../Home/components/Footer";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-import OrderStatusBadge, {
-  ORDER_STATUS_CONFIG,
-} from "../../pages/Store/Dashboard/orders/components/OrderStatusBadge";
-import { fadedown, container } from "../../../../animation";
-import MainHeader from "../../components/MainHeader";
-import { X } from "react-bootstrap-icons";
+import { fadedown, container } from "../../animation";
+import { SortAlphaUpAlt, X } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
-import { Prev } from "react-bootstrap/esm/PageItem";
-
-import { getOrdersByBuyer } from "../../dummyData";
+import BuyerOrderCard from "./components/BuyerOrderCard";
+import { getOrders, getOrder, cancelOrder } from "../../services/orderServices";
+import NavTop from "../../components/PageNav";
 
 const SORT_OPTIONS = [
   { key: "newest", label: "Newest first" },
@@ -47,8 +22,8 @@ const SORT_OPTIONS = [
 const SORT_FNS = {
   newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   oldest: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-  highest: (a, b) => b.total - a.total,
-  lowest: (a, b) => a.total - b.total,
+  highest: (a, b) => Number(b.total || 0) - Number(a.total || 0),
+  lowest: (a, b) => Number(a.total || 0) - Number(b.total || 0),
 };
 
 const FILTER_TABS = [
@@ -60,114 +35,267 @@ const FILTER_TABS = [
   { key: "CANCELLED", label: "Cancelled" },
 ];
 
+function getApiPayload(data) {
+  // Supports either:
+  // { orders: [], total, hasMore }
+  // OR simply []
+  if (Array.isArray(data)) {
+    return {
+      orders: data,
+      total: data.length,
+      hasMore: false,
+    };
+  }
+
+  return {
+    orders: data?.orders || [],
+    total: data?.total ?? data?.orders?.length ?? 0,
+    hasMore: Boolean(data?.hasMore),
+  };
+}
+
 function OrderPage() {
   const navigate = useNavigate();
-  // const [orders, setOrders] = useState([]);
-  // const [loading, setLoading] = useState(false);
+
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const [error, setError] = useState("");
+
   const [filter, setFilter] = useState("ALL");
+
   const [sort, setSort] = useState("newest");
   const [sortLabel, setSortLabel] = useState("Newest first");
   const [sortOpen, setSortOpen] = useState(false);
+
   const [search, setSearch] = useState("");
+
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [cancelModal, setCancelModal] = useState(false);
-  const [cancelLoad, setCancelLoad] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
-  //opens the details offcanvas
-  const handleSelectedOrder = (order) => {
-    setSelectedOrder(order);
-    setShowDetails(true);
-  };
+  const [cancelModal, setCancelModal] = useState(false);
+  const [cancelLoad, setCancelLoad] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
-  {
-    /*  // fetch buyer orders
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const { data } = await axios.get("/api/orders");
-        setOrders(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  //opens the  order details offcanvas
+  const handleSelectedOrder = useCallback(async (order) => {
+    setShowDetails(true);
+    setDetailLoading(true);
+    setCancelModal(false);
+    setCancelReason("");
+    setSelectedOrder(order);
+
+    try {
+      const { data } = await getOrder(order.id);
+
+      const detailedOrder = data?.order || data;
+
+      if (detailedOrder) {
+        setSelectedOrder(detailedOrder);
       }
-    };
-    fetchOrders();
-  }, [orders]);
- */
-  }
-  const orders = getOrdersByBuyer("user-001");
+    } catch (err) {
+      console.error("Failed to fetch order details:", err);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  const handleCloseDetails = useCallback(() => {
+    if (cancelLoad) return;
+
+    setShowDetails(false);
+    setSelectedOrder(null);
+    setCancelModal(false);
+    setCancelReason("");
+  }, [cancelLoad]);
+
+  // fetch buyer orders
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const params = {
+        status: filter !== "ALL" ? filter : undefined,
+        search: search.trim() || undefined,
+      };
+
+      const { data } = await getOrders(params);
+
+      const result = getApiPayload(data);
+
+      setOrders(result.orders);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+
+      setError(
+        err.response?.data?.message ||
+          "We couldn't load your orders. Please try again.",
+      );
+
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchOrders();
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [fetchOrders]);
 
   // counts per status — useMemo
   const statusCounts = useMemo(() => {
-    const counts = { ALL: orders.length };
-    FILTER_TABS.slice(1).forEach((tab) => {
-      counts[tab.key] = orders.filter((o) => o.status === tab.key).length;
+    const counts = {
+      ALL: orders.length,
+      PENDING: 0,
+      CONFIRMED: 0,
+      IN_DELIVERY: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    };
+
+    orders.forEach((order) => {
+      if (counts[order.status] !== undefined) {
+        counts[order.status] += 1;
+      }
     });
+
     return counts;
   }, [orders]);
 
-  // filter + search + sort — useMemo chain
+  // filter + search — useMemo chain
   const filtered = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
     return orders.filter((order) => {
       const matchStatus = filter === "ALL" || order.status === filter;
-      const matchSearch = search
-        ? order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-          order.buyer?.name.toLowerCase().includes(search.toLowerCase()) ||
-          order.items?.some((i) =>
-            i.product?.name.toLowerCase().includes(search.toLowerCase()),
-          )
-        : true;
+
+      if (!normalizedSearch) {
+        return matchStatus;
+      }
+
+      const orderNumber = order.orderNumber?.toLowerCase() || "";
+
+      const buyerName = order.buyer?.name?.toLowerCase() || "";
+
+      const storeName = order.store?.name?.toLowerCase() || "";
+
+      const hasMatchingProduct = order.items?.some((item) =>
+        item.product?.name?.toLowerCase().includes(normalizedSearch),
+      );
+
+      const matchSearch =
+        orderNumber.includes(normalizedSearch) ||
+        buyerName.includes(normalizedSearch) ||
+        storeName.includes(normalizedSearch) ||
+        hasMatchingProduct;
+
       return matchStatus && matchSearch;
     });
   }, [orders, filter, search]);
 
+  //sort
   const sorted = useMemo(() => {
+    if (!SORT_FNS[sort]) {
+      return filtered;
+    }
     return [...filtered].sort(SORT_FNS[sort]);
   }, [filtered, sort]);
 
   // active order — most recent non-delivered
   const activeOrder = useMemo(() => {
-    return orders.find((o) =>
-      ["PENDING", "CONFIRMED", "IN_DELIVERY"].includes(o.status),
-    );
+    const activeStatuses = ["PENDING", "CONFIRMED", "IN_DELIVERY"];
+
+    return [...orders]
+      .filter((order) => activeStatuses.includes(order.status))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
   }, [orders]);
 
   // cancel order — buyer can only cancel if PENDING
-  const handleCancel = useCallback(async (orderId) => {
+  const handleCancel = useCallback(async () => {
+    if (!selectedOrder?.id || cancelLoad) return;
+
     try {
       setCancelLoad(true);
-      const data = await axios.post(`/api/orders/${orderId}/cancel`);
-      setOrders((Prev) => [...Prev, data]);
+      setError("");
+
+      const reason = cancelReason.trim() || "Cancelled by buyer";
+
+      const { data } = await cancelOrder(selectedOrder.id, reason);
+
+      const updatedOrder = data?.order || data;
+
+      // Update selected order immediately.
+      if (updatedOrder) {
+        setSelectedOrder(updatedOrder);
+      }
+
+      // Refresh list from backend.
+      await fetchOrders();
+
       setCancelModal(false);
+      setCancelReason("");
     } catch (err) {
-      console.error(err);
+      console.error("Order cancellation failed:", err);
+
+      setError(
+        err.response?.data?.message ||
+          "Unable to cancel this order. Please try again.",
+      );
     } finally {
       setCancelLoad(false);
     }
-  }, []);
+  }, [selectedOrder, cancelReason, cancelLoad, fetchOrders]);
 
   return (
     <>
-      <MainHeader
-        title="order"
-        showAuth={!true}
-        showCart={false}
-        showSearchbtn={!true}
-        search={false}
-      />
+      <NavTop title="Orders" showSearchBtn={false} />
 
       <Container>
         <section className="orders">
+          {/* ERROR MESSAGE */}
+          {error && (
+            <div
+              className="my-5 p-3"
+              style={{
+                background: "rgba(192,57,43,0.12)",
+                border: "0.5px solid rgba(192,57,43,0.35)",
+                borderRadius: 12,
+                color: "#ec5443",
+              }}
+            >
+              <div className="d-flex align-items-center justify-content-between gap-3">
+                <span>{error}</span>
+
+                <button
+                  type="button"
+                  onClick={fetchOrders}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "#d9ff00",
+                    fontWeight: 600,
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ACTIVE ORDER TRACKER */}
+
           {activeOrder && (
             <div
-              className="my-5"
+              className="my-5 p-4 px-lg-5"
               onClick={() => handleSelectedOrder(activeOrder)}
               style={{
-                background: "linear-gradient(135deg,#1a4a1a,#2d7a0a)",
+                background: "linear-gradient(195deg, #1a4a1ac0, #3550039c)",
                 borderRadius: 14,
                 cursor: "pointer",
               }}
@@ -179,26 +307,29 @@ function OrderPage() {
                       width: 8,
                       height: 8,
                       borderRadius: "50%",
-                      background: "#c9c74c",
+                      background: "#cdda17",
                       animation: "pulse 2s infinite",
                     }}
                   />
-                  <p className="text-white">Active order</p>
+                  <p className="">Active order</p>
                 </div>
                 <OrderStatusBadge status={activeOrder.status} />
               </div>
 
-              <p className="text-white fs-5 my-2">{activeOrder.orderNumber}</p>
+              <p className="text-white fs-5 my-2 my-sm-3 my-lg-4">
+                {activeOrder.orderNumber}
+              </p>
               <p>
-                {activeOrder.store?.name} · {activeOrder.items?.length} item
+                <FaStore /> {activeOrder.store?.name} ·{" "}
+                {activeOrder.items?.length || 0} item
                 {activeOrder.items?.length !== 1 ? "s" : ""}
               </p>
 
               {/* Mini progress bar */}
               <div
-                className="my-3"
+                className="my-3 my-lg-4"
                 style={{
-                  background: "rgba(255,255,255,0.15)",
+                  background: "rgba(255, 255, 255, 0.14)",
                   borderRadius: 3,
                   height: 4,
                 }}
@@ -207,7 +338,7 @@ function OrderPage() {
                   style={{
                     height: "100%",
                     borderRadius: 3,
-                    background: "#cacc36",
+                    background: "#d9ff00",
                     width:
                       activeOrder.status === "PENDING"
                         ? "20%"
@@ -215,7 +346,7 @@ function OrderPage() {
                           ? "40%"
                           : activeOrder.status === "PROCESSING"
                             ? "60%"
-                            : activeOrder.status === "IN_TRANSIT"
+                            : activeOrder.status === "IN_DELIVERY"
                               ? "80%"
                               : "100%",
                     transition: "width 0.4s ease",
@@ -224,48 +355,55 @@ function OrderPage() {
               </div>
 
               <div className="d-flex align-items-center justify-content-between">
-                <span style={{ fontSize: 11, color: "#ffffff80" }}>
-                  {activeOrder.status === "IN_TRANSIT" &&
+                <p>
+                  {activeOrder.status === "IN_DELIVERY" &&
                   activeOrder.estimatedAt
                     ? `Est. delivery: ${new Date(activeOrder.estimatedAt).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`
                     : "Tap to track"}
-                </span>
+                </p>
                 <p
                   className="fw-bold"
                   style={{
-                    color: "#c7c94c",
+                    color: "#d9ff00",
+                    fontFamily: "Syne",
                   }}
                 >
-                  ₦{activeOrder.total?.toLocaleString()}
+                  {" "}
+                  ₦{Number(activeOrder.total || 0).toLocaleString()}
                 </p>
               </div>
             </div>
           )}
 
           {/* SEARCH AND SORT  */}
-          <Row className="align-items-center g-md-4 my-5">
-            {/* SEARCH */}
-            <Col className=" col-12 col-md-10 mb-4 mb-md-0">
+          <Row className="align-items-center gx-3 my-5 py-lg-3">
+            <Col className="col-9">
               <div
-                className="d-flex align-items-center px-3 py-3  gap-3 "
+                className="d-flex gap-2 align-items-center p-3 py-0"
                 style={{
-                  background: "#0a0f0a",
-                  border: "0.5px solid #1a2a1a",
-                  borderRadius: 10,
+                  background: "#040f00a8",
+                  borderRadius: "12px",
+                  border: "0.5px solid #ffffff3f",
                 }}
               >
                 <FaSearch size={20} />
+
                 <Form.Control
-                  style={{ fontSize: "14px" }}
-                  className="py-2"
-                  type="search"
+                  type="text"
+                  className="px-2 border-0 shadow-none"
+                  style={{
+                    letterSpacing: 2,
+                    background: "transparent",
+                    color: "#fff",
+                  }}
                   placeholder="Search orders, stores or products..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+
                 {search && (
                   <X
-                    size={18}
+                    size={30}
                     style={{ cursor: "pointer" }}
                     onClick={() => setSearch("")}
                   />
@@ -273,11 +411,11 @@ function OrderPage() {
               </div>
             </Col>
 
-            {/* SORT */}
-            <Col className="col-md-2  d-flex">
+            <Col className="col-sm-3 d-flex">
               <div className="ms-auto">
                 <button
-                  className="px-3 py-1"
+                  type="button"
+                  className="px-3 py-1 d-flex align-items-center gap-2"
                   onClick={() => setSortOpen(true)}
                   style={{
                     background: "#a7a40631",
@@ -285,100 +423,132 @@ function OrderPage() {
                     borderRadius: 8,
                   }}
                 >
-                  <p style={{ color: "#eeea07" }}> {sortLabel}</p>{" "}
-                  <FaChevronDown className="ms-2" />
-                </button>{" "}
-              </div>
+                  <SortAlphaUpAlt style={{ color: "#eeea07" }} size={20} />
 
-              {/* ---- SORT BOTTOM SHEET ---- */}
-              <AnimatePresence>
-                {sortOpen && (
-                  <Offcanvas
-                    show={sortOpen}
-                    onHide={() => setSortOpen(false)}
-                    placement="bottom"
+                  <p
+                    className="d-none d-md-block"
                     style={{
-                      background: " #172417 ",
-                      height: "35%",
-                      overflowY: "scroll",
+                      color: "#eeea07",
                     }}
                   >
-                    <Container>
-                      <Offcanvas.Title>
-                        {" "}
-                        <div className="d-flex align-items-center justify-content-between pt-3 ">
-                          <h5 className="text-white">Sort orders</h5>
-                          <button
-                            className="d-flex align-items-center justify-content-center"
-                            type="button"
-                            onClick={() => setSortOpen(false)}
+                    {sortLabel}
+                  </p>
+                </button>
+              </div>
+
+              {/* SORT BOTTOM SHEET */}
+
+              <AnimatePresence>
+                {sortOpen && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setSortOpen(false)}
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      background: "rgba(0,0,0,0.6)",
+                      zIndex: 100,
+                      display: "flex",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <motion.div
+                      initial={{ y: 300 }}
+                      animate={{ y: 0 }}
+                      exit={{ y: 300 }}
+                      transition={{
+                        type: "spring",
+                        damping: 25,
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        background: "#172417",
+                        borderRadius: "20px 20px 0 0",
+                        width: "100%",
+                        paddingBottom: 24,
+                      }}
+                    >
+                      <Container>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 4,
+                            background: "#1a2a1a",
+                            borderRadius: 2,
+                            margin: "12px auto 4px",
+                          }}
+                        />
+
+                        <div className="px-4 px-sm-0">
+                          <div
+                            className="py-4"
                             style={{
-                              width: 30,
-                              height: 30,
-                              borderRadius: "50%",
-                              background: "none",
-                              border: "none",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              borderBottom: "0.5px solid #1a2a1a",
                             }}
                           >
-                            <X size={30} className="text-white" />
-                          </button>
-                        </div>
-                      </Offcanvas.Title>
+                            <p className="text-white fs-5">Sort by</p>
 
-                      <Offcanvas.Body className="p-0 py-4 ">
-                        {SORT_OPTIONS.map((opt) => (
-                          <div className="py-2 px-2 " key={opt.key}>
+                            <button
+                              type="button"
+                              onClick={() => setSortOpen(false)}
+                              style={{
+                                width: 35,
+                                height: 35,
+                                borderRadius: "50%",
+                                background: "#1a2a1a",
+                                border: "none",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <X className="text-white" size={30} />
+                            </button>
+                          </div>
+
+                          {SORT_OPTIONS.map((opt) => (
                             <Form.Check
-                              className="d-flex gap-3"
+                              className="d-flex gap-3 py-2 py-sm-3"
+                              key={opt.key}
+                              type="radio"
+                              name="order-sort"
+                              value={opt.key}
+                              checked={sort === opt.key}
+                              label={<p>{opt.label}</p>}
                               onChange={(e) => {
                                 setSort(e.target.value);
                                 setSortLabel(opt.label);
                                 setSortOpen(false);
                               }}
-                              value={opt.key}
-                              label={
-                                <p
-                                  style={{
-                                    color: sort === opt.key ? "#ddda0f" : "",
-                                    fontWeight: sort === opt.key ? 600 : "",
-                                  }}
-                                >
-                                  {opt.label}
-                                </p>
-                              }
-                              checked={sort === opt.key}
-                              type="radio"
                             />
-                          </div>
-                        ))}
-                      </Offcanvas.Body>
-                    </Container>
-                  </Offcanvas>
+                          ))}
+                        </div>
+                      </Container>
+                    </motion.div>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </Col>
           </Row>
 
           {/* FILTER TABS */}
-          <div
-            className="pb-4 my-5"
-            style={{
-              display: "flex",
-              gap: 15,
-              padding: "10px 16px",
-              overflowX: "auto",
-              flexShrink: 0,
-              msOverflowStyle: "none",
-              scrollbarWidth: "thin",
-            }}
-            className="hide-scrollbar"
-          >
+          <div className="my-5 pt-3 py-lg-4 gap-3 gap-md-4 filter-tab py-3 hidescroll-bar">
             {FILTER_TABS.map((tab) => {
               const count = statusCounts[tab.key] || 0;
+
               const isActive = filter === tab.key;
+
               return (
                 <button
-                  className="d-flex align-items-center gap-2 px-2 "
+                  className={`px-3 py-1 d-flex align-items-center gap-2 filter-button ${
+                    isActive ? "active" : ""
+                  }`}
                   key={tab.key}
                   type="button"
                   onClick={() => setFilter(tab.key)}
@@ -387,8 +557,9 @@ function OrderPage() {
                     fontWeight: isActive ? 600 : 400,
                     whiteSpace: "nowrap",
                     transition: "all 0.15s",
-                    border: `0.5px solid ${isActive ? "#cac838" : "rgba(255,255,255,0.08)"}`,
-
+                    border: `0.5px solid ${
+                      isActive ? "#cac838" : "rgba(255,255,255,0.08)"
+                    }`,
                     background: isActive ? "#c7c94c1a" : "transparent",
                   }}
                 >
@@ -397,13 +568,13 @@ function OrderPage() {
                       color: isActive ? "#c4c714" : "rgba(255,255,255,0.4)",
                     }}
                   >
-                    {" "}
                     {tab.label}
                   </p>
+
                   {count > 0 && (
                     <span
                       style={{
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: 700,
                         padding: "1px 6px",
                         borderRadius: 10,
@@ -422,18 +593,21 @@ function OrderPage() {
           </div>
 
           {/* ORDER LIST */}
-          <div className="my-5">
-            {/* Loading */}
+          <div className="my-5 py-lg-4">
             {loading && (
               <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
               >
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
                     style={{
-                      height: 140,
-                      background: "#111a11",
+                      height: 180,
+                      background: "#001100af",
                       borderRadius: 14,
                       border: "0.5px solid #1a2a1a",
                     }}
@@ -442,24 +616,29 @@ function OrderPage() {
               </div>
             )}
 
-            {/* Empty state */}
             {!loading && filtered.length === 0 && (
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "60px 20px",
+                }}
+              >
                 <FaShoppingBag
                   style={{
                     fontSize: 48,
-
                     display: "block",
-                    marginBottom: 14,
+                    margin: "0 auto 14px",
                   }}
                 />
+
                 <p className="mb-2">
                   {filter === "ALL"
                     ? "No orders yet"
                     : `No ${filter.toLowerCase().replace("_", " ")} orders`}
                 </p>
+
                 <p
-                  className="mb-2"
+                  className="mb-3"
                   style={{
                     lineHeight: 1.6,
                   }}
@@ -468,18 +647,19 @@ function OrderPage() {
                     ? "Your orders will appear here once you start shopping"
                     : "Orders in this status will appear here"}
                 </p>
+
                 {filter === "ALL" && (
                   <button
                     type="button"
                     onClick={() => navigate("/shop")}
                     style={{
                       padding: "11px 24px",
-                      background: "#c9a84c",
+                      background: "#c5b62a",
                       border: "none",
                       borderRadius: 10,
                       fontSize: 13,
                       fontWeight: 700,
-                      color: "#1a1000",
+                      color: "#1f1c00",
                       cursor: "pointer",
                     }}
                   >
@@ -489,31 +669,27 @@ function OrderPage() {
               </div>
             )}
 
-            {/* Orders */}
             {!loading && sorted.length > 0 && (
               <motion.div
                 variants={container}
                 initial="hidden"
                 animate="visible"
               >
-                {" "}
-                <Row className="g-3">
-                  {" "}
-                  {sorted.map((order) => {
-                    return (
-                      <Col
-                        key={order.id}
-                        className="col-12 col-md-6 col-xl-4"
-                        onClick={() => handleSelectedOrder(order)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        {" "}
-                        <motion.div variants={fadedown}>
-                          <BuyerOrderCard order={order} />
-                        </motion.div>
-                      </Col>
-                    );
-                  })}
+                <Row className="g-4">
+                  {sorted.map((order) => (
+                    <Col
+                      key={order.id}
+                      className="col-12 col-lg-6 col-xxl-4"
+                      onClick={() => handleSelectedOrder(order)}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    >
+                      <motion.div variants={fadedown}>
+                        <BuyerOrderCard order={order} />
+                      </motion.div>
+                    </Col>
+                  ))}
                 </Row>
               </motion.div>
             )}
@@ -523,14 +699,14 @@ function OrderPage() {
         {/* Order Details */}
         <OrderDetails
           show={showDetails}
-          onHide={() => {
-            setShowDetails(false);
-          }}
+          onHide={handleCloseDetails}
           order={selectedOrder}
-          loading={loading}
+          loading={detailLoading}
           handleCancel={handleCancel}
           cancelModal={cancelModal}
           cancelLoad={cancelLoad}
+          cancelReason={cancelReason}
+          setCancelReason={setCancelReason}
           setCancelModal={setCancelModal}
         />
       </Container>
@@ -543,367 +719,3 @@ function OrderPage() {
 }
 
 export default OrderPage;
-
-
-
-
-
-
-
-
-
-// pages/wallet/TransactionsPage.jsx
-// ============================================================
-// FULL TRANSACTIONS PAGE
-// Filter by type + date range + search
-// Summary — money in / money out / balance
-// All API endpoints documented
-// Dummy data for development
-// ============================================================
-
-import {
-  useState, useEffect, useMemo,
-  useCallback, useRef,
-} from "react";
-import { useNavigate }             from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  TRANSACTIONS,
-  WALLET_SUMMARY,
-} from "../../js/dummyData";
-
-
-
-
-
-// ============================================================
-// TRANSACTION DETAIL BOTTOM SHEET
-// ============================================================
-function TransactionDetailSheet({ txn, onClose }) {
-  if (!txn) return null;
-
-  const cfg    = TYPE_CONFIG[txn.type]   || TYPE_CONFIG.PURCHASE;
-  const status = STATUS_CONFIG[txn.status] || STATUS_CONFIG.COMPLETED;
-  const isCredit = cfg.isCredit && txn.status !== "FAILED";
-
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{
-          position:   "fixed",
-          inset:      0,
-          background: "rgba(0,0,0,0.7)",
-          zIndex:     200,
-          display:    "flex",
-          alignItems: "flex-end",
-        }}
-      >
-        <motion.div
-          initial={{ y: 400 }}
-          animate={{ y: 0 }}
-          exit={{ y: 400 }}
-          transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            background:   "#111a11",
-            borderRadius: "20px 20px 0 0",
-            width:        "100%",
-            maxWidth:     480,
-            margin:       "0 auto",
-            padding:      "0 0 32px",
-          }}
-        >
-          {/* Drag handle */}
-          <div style={{ width: 36, height: 4, background: "#1a2a1a", borderRadius: 2, margin: "12px auto 0" }} />
-
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", borderBottom: "0.5px solid #1a2a1a" }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "#eee" }}>
-              Transaction details
-            </span>
-            <div
-              onClick={onClose}
-              style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <i className="ti ti-x" style={{ fontSize: 14, color: "#888" }} />
-            </div>
-          </div>
-
-          <div style={{ padding: "20px 20px 0" }}>
-
-            {/* Amount — hero */}
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ width: 60, height: 60, borderRadius: "50%", background: cfg.bg, border: `2px solid ${cfg.color}44`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-                <i className={`ti ${cfg.icon}`} style={{ fontSize: 26, color: cfg.color }} />
-              </div>
-              <p style={{ fontFamily: "'Syne',sans-serif", fontSize: 28, fontWeight: 800, color: isCredit ? "#1D9E75" : txn.status === "FAILED" ? "#888" : "#c0392b", margin: 0 }}>
-                {isCredit ? "+" : txn.status !== "FAILED" ? "-" : ""}₦{txn.amount?.toLocaleString()}
-              </p>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "4px 0 8px" }}>
-                {cfg.label}
-              </p>
-              <span style={{ fontSize: 11, fontWeight: 600, color: status.color, background: status.bg, borderRadius: 20, padding: "3px 12px" }}>
-                {status.label}
-              </span>
-            </div>
-
-            {/* Details table */}
-            <div style={{ background: "#0a1a0a", border: "0.5px solid #1a2a1a", borderRadius: 12, overflow: "hidden" }}>
-              {[
-                { label: "Description", val: txn.title       },
-                { label: "Details",     val: txn.description },
-                { label: "Date",        val: new Date(txn.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) },
-                { label: "Time",        val: formatTime(txn.createdAt) },
-                { label: "Reference",   val: txn.reference, mono: true  },
-                { label: "Type",        val: cfg.label       },
-              ].filter(r => r.val).map((row, i) => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "11px 14px", borderTop: i > 0 ? "0.5px solid #1a2a1a" : "none", gap: 12 }}>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
-                    {row.label}
-                  </span>
-                  <span style={{ fontSize: 12, color: "#ddd", fontWeight: 500, textAlign: "right", fontFamily: row.mono ? "monospace" : "inherit", wordBreak: "break-all" }}>
-                    {row.val}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Copy reference */}
-            {txn.reference && (
-              <button
-                type="button"
-                onClick={() => navigator.clipboard?.writeText(txn.reference)}
-                style={{ width: "100%", padding: "11px 0", marginTop: 12, background: "transparent", border: "0.5px solid rgba(201,168,76,0.25)", borderRadius: 10, fontSize: 12, color: "#c9a84c", cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-              >
-                <i className="ti ti-copy" style={{ fontSize: 14 }} />
-                Copy reference number
-              </button>
-            )}
-
-            {/* Link to related order if applicable */}
-            {txn.metadata?.orderId && (
-              <button
-                type="button"
-                onClick={() => {}}
-                style={{ width: "100%", padding: "11px 0", marginTop: 8, background: "rgba(29,158,117,0.08)", border: "0.5px solid rgba(29,158,117,0.2)", borderRadius: 10, fontSize: 12, color: "#1D9E75", cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-              >
-                <i className="ti ti-shopping-bag" style={{ fontSize: 14 }} />
-                View related order
-              </button>
-            )}
-
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
-// ============================================================
-// MAIN PAGE
-// ============================================================
-export default function TransactionsPage() {
- 
-  return (
-    <div style={{ background: "#0a1a0a", minHeight: "100vh", paddingBottom: 100 }}>
-
-      {/* ================================================================
-          TOPBAR
-      ================================================================ */}
-      <div style={{
-        position:             "sticky",
-        top:                  0,
-        zIndex:               30,
-        background:           "rgba(10,26,10,0.97)",
-        backdropFilter:       "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        borderBottom:         "0.5px solid #1a2a1a",
-        padding:              "12px 16px",
-        display:              "flex",
-        alignItems:           "center",
-        justifyContent:       "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            onClick={() => navigate(-1)}
-            style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-          >
-            <i className="ti ti-arrow-left" style={{ fontSize: 15, color: "#888" }} />
-          </div>
-          <div>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", margin: 0 }}>Wallet</p>
-            <h1 style={{ fontFamily: "'Syne',sans-serif", fontSize: 18, fontWeight: 700, color: "#eee", margin: 0 }}>
-              Transactions
-            </h1>
-          </div>
-        </div>
-
-       
-      </div>
-
-     
-
-
-     
-
-      {/* ================================================================
-          TRANSACTION LIST
-      ================================================================ */}
-      <div style={{ padding: "0 16px" }}>
-
-        {/* Loading skeletons */}
-        {loading && (
-        
-        )}
-
-        {/* Empty state */}
-        
-
-        {/* Grouped transactions */}
-        {!loading && grouped.map(([dateLabel, txns]) => (
-          <div key={dateLabel}>
-
-            {/* Date group header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 0 8px" }}>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: 1.5, textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>
-                {dateLabel}
-              </p>
-              <div style={{ flex: 1, height: "0.5px", background: "#1a2a1a" }} />
-              {/* Daily summary */}
-              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                {(() => {
-                  const dayIn  = txns.filter(t => TYPE_CONFIG[t.type]?.isCredit && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
-                  const dayOut = txns.filter(t => !TYPE_CONFIG[t.type]?.isCredit && t.status === "COMPLETED").reduce((s, t) => s + t.amount, 0);
-                  return (
-                    <>
-                      {dayIn  > 0 && <span style={{ fontSize: 10, color: "#1D9E75", fontWeight: 600 }}>+₦{dayIn.toLocaleString()}</span>}
-                      {dayOut > 0 && <span style={{ fontSize: 10, color: "#c0392b", fontWeight: 600 }}>-₦{dayOut.toLocaleString()}</span>}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Transactions in this date group */}
-            <motion.div variants={container} initial="hidden" animate="show">
-              {txns.map(txn => {
-                const cfg       = TYPE_CONFIG[txn.type]     || TYPE_CONFIG.PURCHASE;
-                const statusCfg = STATUS_CONFIG[txn.status] || STATUS_CONFIG.COMPLETED;
-                const isFailed  = txn.status === "FAILED";
-                const isCredit  = cfg.isCredit && !isFailed;
-
-                return (
-                  <motion.div
-                    key={txn.id}
-                    variants={cardAnim}
-                    onClick={() => setSelectedTxn(txn)}
-                    style={{
-                      display:    "flex",
-                      alignItems: "center",
-                      gap:        12,
-                      padding:    "12px 0",
-                      
-                    }}
-                  >
-                    {/* Type icon */}
-                    <div style={{}}>
-                      <i className={`ti ${isFailed ? "ti-alert-circle" : cfg.icon}`}
-                         style={{ fontSize: 18, color: isFailed ? "#666" : cfg.color }} />
-                    </div>
-
-                    {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, color: isFailed ? "rgba(255,255,255,0.35)" : "#ddd", fontWeight: 500, margin: 0, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {txn.title}
-                      </p>
-                      <p >
-                        {txn.description}
-                      </p>
-                    
-                    </div>
-
-                    {/* Amount + chevron */}
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: isFailed ? "#555" : isCredit ? "#1D9E75" : "#c0392b", margin: 0 }}>
-                        {isFailed ? "" : isCredit ? "+" : "-"}₦{txn.amount?.toLocaleString()}
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 3 }}>
-                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
-                          {cfg.label}
-                        </span>
-                        <i className="ti ti-chevron-right" style={{ fontSize: 11, color: "rgba(255,255,255,0.15)" }} />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </div>
-        ))}
-
-       
-
-      </div>
-
-      {/* ================================================================
-          SORT BOTTOM SHEET
-      ================================================================ */}
-      <AnimatePresence>
-        {sortOpen && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setSortOpen(false)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "flex-end" }}
-          >
-            <motion.div
-              initial={{ y: 250 }} animate={{ y: 0 }} exit={{ y: 250 }}
-              transition={{ type: "spring", damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-              style={{ background: "#111a11", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 480, margin: "0 auto", paddingBottom: 24 }}
-            >
-              <div style={{ width: 36, height: 4, background: "#1a2a1a", borderRadius: 2, margin: "12px auto 4px" }} />
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 20px 14px", borderBottom: "0.5px solid #1a2a1a" }}>
-                <span style={{ fontSize: 15, fontWeight: 600, color: "#eee" }}>Sort by</span>
-                <button type="button" onClick={() => setSortOpen(false)} style={{ width: 28, height: 28, borderRadius: "50%", background: "#1a2a1a", border: "none", color: "#aaa", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className="ti ti-x" style={{ fontSize: 14 }} />
-                </button>
-              </div>
-              {SORT_OPTIONS.map(opt => (
-                <div
-                  key={opt.key}
-                  onClick={() => { setSort(opt.key); setSortOpen(false); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", cursor: "pointer", background: sort === opt.key ? "#1f1a0e" : "transparent", borderBottom: "0.5px solid #1a2a1a" }}
-                >
-                  <span style={{ fontSize: 14, color: sort === opt.key ? "#c9a84c" : "#ccc", fontWeight: sort === opt.key ? 600 : 400 }}>
-                    {opt.label}
-                  </span>
-                  {sort === opt.key && <i className="ti ti-check" style={{ fontSize: 16, color: "#c9a84c" }} />}
-                </div>
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ================================================================
-          DATE FILTER BOTTOM SHEET
-      ================================================================ */}
-    
-
-      {/* ================================================================
-          TRANSACTION DETAIL SHEET
-      ================================================================ */}
-      {selectedTxn && (
-        <TransactionDetailSheet
-          txn={selectedTxn}
-          onClose={() => setSelectedTxn(null)}
-        />
-      )}
-
-    </div>
-  );
-}

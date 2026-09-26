@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import MainHeader from "../../components/MainHeader";
 import { Footer } from "./components/Footer";
 import { FaStar, FaStore, FaShoppingBasket } from "react-icons/fa";
-import { zoomIn, container, fadeUp } from "../../animation";
+import { zoomIn, container, fadeUp } from "../../utils/animation";
 import { motion } from "framer-motion";
 import { WhyUs } from "./components/WhyUs";
 import { Categories } from "./components/Categories";
 import { FeaturedProducts } from "./components/FeaturedProducts";
 import { HowItWorks } from "./components/HowItworks";
+import { ArrowRight } from "react-bootstrap-icons";
 
 function HomePage() {
   return (
@@ -20,21 +21,21 @@ function HomePage() {
       <Container>
         <div className="align-items-center text-light text-center about-us text-light ">
           <div
-            className="mb-4 mb-xl-5 hero1"
+            className="mb-3 mb-xl-5 hero1"
             style={{
               fontStyle: "italic",
-              lineHeight: 1.2,
+              lineHeight: 1,
+              color: "#ffee00",
             }}
           >
             YOUR MARKET
           </div>
 
           <div
-            className="d-flex align-items-center gap-lg-3 flex-wrap justify-content-center "
+            className="d-flex align-items-center gap-2 gap-lg-5 flex-wrap justify-content-center text-white"
             style={{
-              color: "rgb(255, 238, 0)",
               fontStyle: "italic",
-              lineHeight: 1,
+              lineHeight: 0.9,
             }}
           >
             <div className="hero2">YOUR</div>{" "}
@@ -57,36 +58,32 @@ function HomePage() {
           </div>
         </div>
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          style={{ paddingBottom: "150px" }}
-        >
-          <div className="d-flex  gap-4 gap-lg-5 justify-content-center">
-            <Link to="/get-store">
+        <h6 className="my-4 my-lg-5 text-center" style={{ lineHeight: 1.5 }}>
+          Tired of sending pictures and prices back and forth? Create your free
+          online store in 2 minutes, get discovered by your customers using your
+          store slug also by buyers across Nigeria
+        </h6>
+
+        <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+          <div className="d-flex  gap-5 justify-content-center pb-5">
+            <Link to="/create-store">
               {" "}
-              <button className="btn1 p-3">
-                <div className="d-flex align-items-center gap-3">
-                  <FaStore size={30} />{" "}
-                  <h6 className="text-black">Get a Store</h6>
-                </div>
+              <button className="btn1 px-4 py-2 d-flex align-items-center gap-2 text-black">
+                <FaStore size={20} /> Get your free store
               </button>
             </Link>
 
-            <Link to="/shopping">
-              <button className="btn2 p-3">
-                <div className="d-flex align-items-center gap-3">
-                  <FaShoppingBasket size={30} />{" "}
-                  <h6 className="text-black">Start Shopping</h6>
-                </div>
+            <Link to="/shop">
+              <button className="btn2 px-4 py-2 d-flex align-items-center gap-2 ">
+                <FaShoppingBasket size={20} /> Browse the marketplace{" "}
+                <ArrowRight />
               </button>
             </Link>
           </div>
         </motion.div>
       </Container>
 
-      <section style={{ background: "#494708", padding: "150px 0" }}>
+      <section className="py-5" style={{ background: "#494708" }}>
         {" "}
         <Container>
           <Row

@@ -1,7 +1,6 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import ProductFilter from "./ProductFilter";
 import ProductDetails from "./ProductDetails";
-import axios from "axios";
 import ProductGroupAccordion from "./ProductGroupAccordion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +14,7 @@ import {
   FaUtensils,
 } from "react-icons/fa";
 import { Book, Building, CarFront, Grid, Leaf } from "react-bootstrap-icons";
+import { toggleWishlist, addToCart } from "../../services/shoppingService";
 
 // ---- CONFIGS ----
 export const CATEGORY_CONFIG = {
@@ -47,7 +47,7 @@ export const PRODUCT_TYPE_CONFIG = {
     showMap: false,
   },
 
-  VEHICLE: {
+  CAR: {
     cta: "Contact seller",
     ctaColor: "none",
     ctaBg: "linear-gradient(135deg, #1a4a1a, #2d7a0a)",
@@ -80,7 +80,7 @@ const SORT_CONFIG = {
 
 export default function ProductPage({
   filter = true,
-  product,
+  product = [],
   count = true,
   Store = true,
   Shop = true,
@@ -95,50 +95,96 @@ export default function ProductPage({
   sort,
   setSort,
   CATEGORIES,
+  totalProducts = 0,
   selectedCategory,
   setSelectedCategory,
 }) {
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [isWish, setIsWish] = useState({});
+  const [wishedProducts, setWishedProducts] = useState({});
+  const [cartLoading, setCartLoading] = useState({});
+  const [wishlistLoading, setWishlistLoading] = useState({});
 
   // handle product click
-  const selectProduct = useCallback((product) => {
-    setSelectedProduct(product);
+  const selectProduct = useCallback((selected) => {
+    if (!selected) return;
+    setSelectedProduct(selected);
     setShowDetails(true);
   }, []);
 
   const handleDetailClose = useCallback(() => {
     setShowDetails(false);
-
-    setTimeout(() => setSelectedProduct(null), 350);
+    window.setTimeout(() => {
+      setSelectedProduct(null);
+    }, 350);
   }, []);
-
-  // filtering by category and search
-  const filtered = useMemo(() => {
-    return product.filter((p) => {
-      const matchCategory =
-        selectedCategory === "All" || p.category === selectedCategory;
-
-      return matchCategory;
-    });
-  }, [product, selectedCategory]);
-
-  // sorting filtered results
-  const sorted = useMemo(() => {
-    return [...filtered].sort(SORT_CONFIG[sort]);
-  }, [filtered, sort]);
 
   // wishlist toggle — useCallback
-  const handleWishlist = useCallback(async (productId) => {
-    setIsWish((prev) => ({ ...prev, [productId]: !prev[productId] }));
-    try {
-      await axios.post("/api/wishlist/toggle", { productId });
-    } catch {
-      setIsWish((prev) => ({ ...prev, [productId]: !prev[productId] }));
-    }
-  }, []);
+  const handleWishlist = useCallback(
+    async (productId) => {
+      if (!productId) return;
+      //Prevent duplicate clicks while request is running
+      if (wishlistLoading[productId]) return;
+
+      setWishedProducts((prev) => ({ ...prev, [productId]: !prev[productId] }));
+      setWishlistLoading((prev) => ({ ...prev, [productId]: true }));
+      try {
+        const response = await toggleWishlist(productId);
+        if (typeof response?.isWishlisted === "boolean") {
+          setWishedProducts((prev) => ({
+            ...prev,
+            [productId]: response.isWishlisted,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to update wishlist:", error);
+        setWishedProducts((prev) => ({
+          ...prev,
+          [productId]: !prev[productId],
+        }));
+      } finally {
+        setWishlistLoading((prev) => ({ ...prev, [productId]: false }));
+      }
+    },
+    [wishlistLoading],
+  );
+
+  const isWishlisted = useCallback(
+    (productId) => {
+      if (!productId) return false;
+      if (wishedProducts instanceof Set) {
+        return wishedProducts.has(productId);
+      }
+      if (Array.isArray(wishedProducts)) {
+        return wishedProducts.includes(productId);
+      }
+      return Boolean(wishedProducts?.[productId]);
+    },
+    [wishedProducts],
+  );
+
+  const handleAddToCart = useCallback(
+    async (product, quantity = 1) => {
+      if (!product?.id) return;
+      // Prevent duplicate requests
+      if (cartLoading[product.id]) return;
+      setCartLoading((prev) => ({ ...prev, [product.id]: true }));
+      try {
+        await addToCart({
+          productId: product.id,
+          quantity,
+          variant: product.selectedVariant ?? null,
+        });
+        console.log("Product added to cart");
+      } catch (error) {
+        console.error("Failed to add product to cart:", error);
+      } finally {
+        setCartLoading((prev) => ({ ...prev, [product.id]: false }));
+      }
+    },
+    [cartLoading],
+  );
 
   return (
     <>
@@ -160,12 +206,14 @@ export default function ProductPage({
         {/* GRID */}
         <ProductGroupAccordion
           selectProduct={selectProduct}
-          sorted={sorted}
-          wished={isWish}
+          sorted={product}
+          wished={isWishlisted}
           handleWishlist={handleWishlist}
+          handleAddToCart={handleAddToCart}
           showWishlist={showWishlist}
           Store={Store}
           Shop={Shop}
+          totalProducts={totalProducts}
           count={count}
           loading={loading}
           activeFilterCount={activeFilterCount}
@@ -179,13 +227,13 @@ export default function ProductPage({
 
         {/* DETAILS (desktop animated switching) */}
 
-        {showDetails && (
+        {showDetails && selectedProduct && (
           <ProductDetails
             show={showDetails}
             product={selectedProduct}
             onClose={handleDetailClose}
             onWishlist={handleWishlist}
-            wished={!!isWish[selectedProduct?.id]}
+            wished={isWishlisted(selectedProduct.id)}
             navigate={navigate}
           />
         )}

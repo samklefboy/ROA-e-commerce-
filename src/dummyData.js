@@ -505,10 +505,11 @@ export const PRODUCTS = [
 
   // ---- CAR LISTING ----
   {
+    /*  {
     id: "prod-006",
     storeId: "store-001",
     store: STORES[0],
-    type: "VEHICLE",
+    type: "CAR",
     name: "2019 Toyota Camry LE Sedan",
     description:
       "Well maintained 2019 Toyota Camry LE in excellent condition. Originally purchased from a Toyota dealership in the US. Full service history available. No accidents. First owner in Nigeria.",
@@ -549,7 +550,7 @@ export const PRODUCTS = [
       contactMethod: ["WhatsApp", "Phone call"],
     },
     createdAt: "2026-07-20T10:00:00.000Z",
-  },
+  }, 
 
   // ---- REAL ESTATE ----
   {
@@ -601,6 +602,7 @@ export const PRODUCTS = [
       location: "Lekki Phase 1, Lagos",
     },
     createdAt: "2026-07-18T09:00:00.000Z",
+  }, */
   },
 ];
 
@@ -634,7 +636,7 @@ export const ORDERS = [
     deliveryFee: 1500,
     discount: 0,
     total: 29500,
-    status: "IN_TRANSIT",
+    status: "IN_DELIVERY",
     paymentStatus: "PAID",
     paymentMethod: "r.o.a. Wallet",
     deliveryAddress: {
@@ -814,7 +816,7 @@ export const NOTIFICATIONS = [
   {
     id: "notif-001",
     userId: "user-001",
-    type: "ORDER_TRANSIT",
+    type: "ORDER_IN_DELIVERY",
     title: "Your order is <strong>on the way</strong> 🚚",
     description:
       "Order ROA-4821 from Zara NG has been picked up and is heading your way. Estimated arrival: today by 5 PM.",

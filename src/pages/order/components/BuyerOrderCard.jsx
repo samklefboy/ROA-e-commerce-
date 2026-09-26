@@ -3,9 +3,12 @@
 import { Star } from "react-bootstrap-icons";
 import { FaShoppingBag, FaStore } from "react-icons/fa";
 import { FiMapPin } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import OrderStatusBadge from "../../Store/Dashboard/orders/components/OrderStatusBadge";
+import { contactStoreOnWhatsApp } from "../../../utils/whatsapp";
 
 function timeAgo(dateString) {
-  const diff = Date.now() - new Date(dateString).getTime();
+  const diff = Math.max(0, Date.now() - new Date(dateString).getTime());
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
@@ -21,99 +24,141 @@ function timeAgo(dateString) {
   });
 }
 
-export function BuyerOrderCard({ order }) {
+export default function BuyerOrderCard({ order }) {
   const navigate = useNavigate();
 
   const isDelivered = order.status === "DELIVERED";
   const isCancelled = order.status === "CANCELLED";
-  const isActive = ["PENDING", "CONFIRMED", "IN_TRANSIT"].includes(
+  const isActive = ["PENDING", "CONFIRMED", "IN_DELIVERY"].includes(
     order.status,
   );
 
+  const firstProduct = order.items?.[0]?.product;
+
+  const itemCount = order.items?.length || 0;
+
+  const total = Number(order.total || 0);
+
+  const handleContactStore = (e) => {
+    e.stopPropagation();
+
+    contactStoreOnWhatsApp({
+      store: order.store,
+      orderNumber: order.orderNumber,
+    });
+  };
+
+  const handleRateStore = (e) => {
+    e.stopPropagation();
+
+    navigate(`/orders/${order.id}/review`);
+  };
+
+  const handleBuyAgain = (e) => {
+    e.stopPropagation();
+
+    const productId = order.items?.[0]?.productId;
+
+    if (!productId) return;
+
+    navigate(`/product/${productId}`);
+  };
+
   return (
     <div
+      className="order_card"
       style={{
-        background: "#090e09d5",
-        border: `0.5px solid #fffb0052`,
-        borderRadius: 14,
         overflow: "hidden",
-        transition: "border-color 0.2s",
       }}
     >
-      {/* Active indicator line */}
-      {isActive && (
-        <div
-          style={{
-            height: 6,
-            background: "linear-gradient(90deg, #c7c94c, #1D9E75)",
-          }}
-        />
-      )}
+      <div className="p-4 px-3 p-xxl-4 py-xxl-5">
+        {/* TOP ROW */}
 
-      <div className="p-3 p-4 p-xxl-5">
-        {/* Top row */}
-        <div className="d-flex align-items-start justify-content-between ">
+        <div className="d-flex align-items-start gap-3 justify-content-between">
           <div>
-            <span style={{ fontSize: "clamp(12px, 3vw, 16px)" }}>
+            <small
+              style={{
+                color: "#ffffff77",
+              }}
+            >
               {timeAgo(order.createdAt)} · {order.orderNumber}
-            </span>
-            <div className="d-flex align-items-center gap-3 mt-3">
+            </small>
+
+            <div className="d-flex align-items-center gap-2 mt-2">
               {order.store?.logo ? (
                 <img
                   src={order.store.logo}
-                  alt={order.store.name}
+                  alt={order.store?.name || "Store"}
                   style={{
-                    width: 33,
-                    aspectRatio: 1 / 1,
-                    borderRadius: 5,
+                    width: 45,
+                    aspectRatio: "1 / 1",
+                    borderRadius: "50%",
                     objectFit: "cover",
                   }}
                 />
               ) : (
                 <div
                   style={{
-                    width: 33,
-                    aspectRatio: 1 / 1,
-                    borderRadius: 5,
+                    width: 45,
+                    aspectRatio: "1 / 1",
+                    borderRadius: "50%",
                     background: "#1a2a1a",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <FaStore style={{ fontSize: 12 }} />
+                  <FaStore
+                    style={{
+                      fontSize: 22,
+                    }}
+                  />
                 </div>
               )}
-              <p className="text-white" style={{ fontWeight: 600 }}>
-                {order.store?.name}
+
+              <p
+                className="text-white"
+                style={{
+                  fontWeight: 600,
+                }}
+              >
+                {order.store?.name || "Store"}
               </p>
             </div>
           </div>
+
           <OrderStatusBadge status={order.status} />
         </div>
 
-        {/* Items */}
-        <div className="d-flex align-items-center gap-4 my-4 py-2 my-md-5 ">
-          {/* Image stack */}
-          <div style={{ display: "flex", flexShrink: 0 }}>
+        {/* ITEMS */}
+
+        <div className="d-flex align-items-center gap-2 gap-lg-3 my-3 mb-4 my-xxl-4">
+          {/* IMAGE STACK */}
+
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+            }}
+          >
             {order.items?.slice(0, 3).map((item, i) => (
               <div
-                key={i}
+                key={item.id || `${item.productId}-${i}`}
                 style={{
-                  width: 65,
-                  aspectRatio: 1 / 1,
-                  borderRadius: 8,
+                  width: 63,
+                  aspectRatio: "1 / 1",
+                  borderRadius: 12,
                   background: "#1a2a1a",
                   flexShrink: 0,
                   overflow: "hidden",
-                  border: "1.5px solid #0a1a0a",
-                  marginLeft: i > 0 ? -16 : 0,
+                  borderLeft: "1.5px solid #000000",
+                  marginLeft: i > 0 ? -26 : 0,
                 }}
               >
                 {item.product?.images?.[0] ? (
                   <img
                     src={item.product.images[0]}
-                    alt={item.product.name}
+                    alt={item.product?.name || "Product"}
                     style={{
                       width: "100%",
                       height: "100%",
@@ -130,17 +175,27 @@ export function BuyerOrderCard({ order }) {
                       justifyContent: "center",
                     }}
                   >
-                    <FaShoppingBag style={{ fontSize: 23 }} />
+                    <FaShoppingBag
+                      style={{
+                        fontSize: 23,
+                      }}
+                    />
                   </div>
                 )}
               </div>
             ))}
           </div>
 
-          {/* Item names */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* ITEM NAMES */}
+
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+            }}
+          >
             <p
-              className="text-white mb-3"
+              className="text-white mb-1"
               style={{
                 overflow: "hidden",
                 fontWeight: 500,
@@ -148,31 +203,39 @@ export function BuyerOrderCard({ order }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {order.items?.[0]?.product?.name}
+              {firstProduct?.name || "Order items"}
             </p>
-            {order.items?.length > 1 && (
-              <span>
-                +{order.items.length - 1} more item
-                {order.items.length - 1 !== 1 ? "s" : ""}
-              </span>
+
+            {itemCount > 1 && (
+              <small
+                style={{
+                  color: "#ffffff77",
+                }}
+              >
+                +{itemCount - 1} more item
+                {itemCount - 1 !== 1 ? "s" : ""}
+              </small>
             )}
+
             <p
-              className=" fw-bold mt-3"
+              className="fw-bold"
               style={{
                 color: "#58c22e",
+                fontFamily: "Syne",
               }}
             >
-              ₦{order.total?.toLocaleString()}
+              ₦{total.toLocaleString()}
             </p>
           </div>
         </div>
 
-        {/* Progress bar for active orders */}
+        {/* ACTIVE PROGRESS */}
+
         {isActive && (
           <div className="my-4">
             <div
               style={{
-                background: "#1a2a1a",
+                background: "#1a2a1ada",
                 borderRadius: 3,
                 height: 4,
               }}
@@ -184,17 +247,23 @@ export function BuyerOrderCard({ order }) {
                   background: "linear-gradient(90deg, #1D9E75, #c9c74c)",
                   width:
                     order.status === "PENDING"
-                      ? "15%"
+                      ? "25%"
                       : order.status === "CONFIRMED"
-                        ? "55%"
-                        : order.status === "IN_TRANSIT"
-                          ? "80%"
+                        ? "50%"
+                        : order.status === "IN_DELIVERY"
+                          ? "75%"
                           : "100%",
                   transition: "width 0.4s ease",
                 }}
               />
             </div>
-            <span className="mt-3" style={{ fontSize: 12 }}>
+
+            <span
+              className="d-block my-2"
+              style={{
+                fontSize: 12,
+              }}
+            >
               {order.status === "PENDING"
                 ? "Waiting for seller to confirm"
                 : order.status === "CONFIRMED"
@@ -206,135 +275,133 @@ export function BuyerOrderCard({ order }) {
           </div>
         )}
 
-        {/* Bottom row — action buttons */}
+        {/* ACTIONS */}
+
         <div
           style={{
             display: "flex",
             gap: 8,
-            paddingTop: 12,
-            borderTop: "0.5px solid #1a2a1a",
+            paddingTop: 15,
+            borderTop: "0.5px solid #008300",
+            flexWrap: "wrap",
           }}
         >
-          {/* Track order */}
+          {/* TRACK */}
+
           {isActive && (
             <button
-              className="d-flex align-items-center justify-content-center gap-2"
+              className="d-flex align-items-center justify-content-center gap-1"
               type="button"
-              //  onClick={(e) => { e.stopPropagation(); navigate(`/orders/${order.id}`); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // The order card is already inside
+                // the details flow. Tracking details
+                // will be loaded from the backend.
+              }}
               style={{
                 flex: 1,
+                minWidth: 110,
                 padding: "9px 0",
                 background: "#c9c74c2a",
                 border: "0.5px solid #c9c74c75",
                 borderRadius: 10,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 600,
                 color: "#c9c74c",
                 cursor: "pointer",
               }}
             >
-              <FiMapPin className="mb-1" style={{ fontSize: 13 }} />
+              <FiMapPin />
               Track order
             </button>
           )}
 
-          {/* Contact store */}
+          {/* WHATSAPP */}
+
           <button
-            className="d-flex align-items-center justify-content-center gap-2"
+            className="d-flex align-items-center justify-content-center gap-1"
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/store/${order.storeId}`);
-            }}
+            onClick={handleContactStore}
             style={{
               flex: 1,
+              minWidth: 110,
               padding: "9px 0",
-              background: "rgba(255,255,255,0.04)",
+              background: "rgba(255,255,255,0.08)",
               border: "0.5px solid rgba(255,255,255,0.08)",
               borderRadius: 10,
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: 500,
-              color: "rgba(255,255,255,0.5)",
+              color: "#ffffff93",
               cursor: "pointer",
             }}
           >
-            <FaStore className="mb-1" style={{ fontSize: 13 }} />
+            <FaStore />
             Contact store
           </button>
 
-          {/* Rate store — delivered only */}
+          {/* RATE */}
+
           {isDelivered && !order.hasReviewed && (
             <button
-              className="d-flex align-items-center justify-content-center gap-2"
+              className="d-flex align-items-center justify-content-center gap-1"
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/orders/${order.id}/review`);
-              }}
+              onClick={handleRateStore}
               style={{
                 flex: 1,
+                minWidth: 110,
                 padding: "9px 0",
                 background: "#4cc98018",
                 border: "0.5px solid #4cc98054",
                 borderRadius: 10,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 600,
                 color: "#4cc980",
                 cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 5,
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
               }}
             >
-              <Star className="mb-1" style={{ fontSize: 13 }} />
+              <Star className="mb-1" />
               Rate store
             </button>
           )}
 
-          {/* Buy again — delivered */}
+          {/* BUY AGAIN */}
+
           {isDelivered && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/product/${order.items?.[0]?.productId}`);
-              }}
+              onClick={handleBuyAgain}
               style={{
                 flex: 1,
+                minWidth: 110,
                 padding: "9px 0",
                 background: "#c1c94c1a",
                 border: "0.5px solid #c1c94c63",
                 borderRadius: 10,
-                fontSize: 12,
+                fontSize: 14,
                 fontWeight: 600,
                 color: "#c1c94c",
                 cursor: "pointer",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
               }}
             >
               Buy again
             </button>
           )}
 
-          {/* Cancelled info */}
+          {/* CANCELLED */}
+
           {isCancelled && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/orders/${order.id}`);
-              }}
               style={{
                 flex: 1,
+                minWidth: 110,
                 padding: "9px 0",
-                background: "rgba(192,57,43,0.06)",
+                background: "rgba(192,58,43,0.22)",
                 border: "0.5px solid rgba(192,57,43,0.2)",
                 borderRadius: 10,
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#c0392b",
+                color: "#ec5443",
                 cursor: "pointer",
               }}
             >

@@ -74,12 +74,8 @@
   .price {
     color: #00e676;
     font-size: 19px;
+    font-family: "Syne";
     font-weight: 600;
-  }
-
-  .old-price {
-    font-size: 0.75rem;
-    text-decoration: line-through;
   }
 
   .meta {
@@ -100,7 +96,7 @@
 }
 
 .wishlist-active {
-  color: #ffd902 !important;
+  color: #f7d932;
 }
 
 .product-details {
@@ -154,14 +150,14 @@
     margin: 0;
 
     .new-price {
-      font-family: "Bebas Neue";
+      font-family: "Syne";
       color: rgb(0, 230, 118);
       letter-spacing: 1px;
       font-size: 1.8rem;
     }
 
     .old-price {
-      color: rgba(255, 255, 255, 0.6);
+      color: #a0a0a0;
       font-size: 0.77rem;
       text-decoration: line-through;
       font-family: "outfit", sans-serif;
@@ -262,13 +258,4 @@
 .form-select:focus {
   box-shadow: none !important;
   border: none;
-}
-
-.group_header {
-  @media (min-width: 750px) and (max-width: 767px) {
-    top: 135px !important;
-  }
-  @media (min-width: 768px) {
-    top: 140px !important;
-  }
 }

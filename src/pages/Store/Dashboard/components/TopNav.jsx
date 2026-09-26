@@ -1,102 +1,170 @@
 import { Container, Image } from "react-bootstrap";
-import { FiArrowLeft, FiBell, FiSettings } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-import { ArrowUpShort, SortAlphaDown } from "react-bootstrap-icons";
+import { useEffect, useState } from "react";
+import { FiBell, FiHome, FiPackage } from "react-icons/fi";
+import { Link } from "react-router-dom";
+import { ChevronDown, Search } from "react-bootstrap-icons";
+import { FaMoneyBill, FaShoppingBasket, FaStore } from "react-icons/fa";
 
-export function TopNav({ title, setSortOpen }) {
-  const navigate = useNavigate();
+export function TopNav({ selectedTab, setSelectedTab }) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
   return (
     <>
-      {" "}
-      <div
-        className=" py-2 py-lg-3 fixed-top"
-        style={{
-          background: "#058f333a",
-          backdropFilter: "blur(30px)",
-          borderBottom: "1px solid #a5c70e65",
-        }}
-      >
+      <div className={`fixed-top  ${scrolled ? "nav-scroll" : ""}`}>
         <Container>
-          <div className="d-flex align-items-center gap-3 gap-sm-4 nav_bar py-1">
-            <h3
+          <div className=" py-2 d-flex align-items-center justify-content-between ">
+            <Link to="/">
+              <div
+                className="d-flex align-items-center gap-2 "
+                style={{ fontSize: 35 }}
+              >
+                {" "}
+                <span style={{ color: " rgb(163, 207, 4)" }}>r.</span>
+                <span style={{ color: "rgb(196, 250, 1)" }}>o.</span>
+                <span style={{ color: "rgb(0, 241, 0)" }}>a</span>
+              </div>
+            </Link>
+
+            <div
+              className="d-flex align-items-center justify-content-between  py-2 px-3 w-100 mx-5 d-none d-md-flex"
               style={{
-                lineHeight: 1.5,
-                color: "#ffee02",
-                fontStyle: "oblique",
+                background: "rgba(0, 34, 9, 0.78)",
+                borderRadius: 20,
               }}
             >
-              Annointed Chips
-            </h3>
+              {[
+                { Icon: FiHome, a: "Overview" },
+                { Icon: FiPackage, a: "Products" },
+                { Icon: FaShoppingBasket, a: "Orders" },
+                { Icon: FaMoneyBill, a: "Earnings" },
+                { Icon: FaStore, a: "Store" },
+              ].map((s) => {
+                return (
+                  <div onClick={() => setSelectedTab(s.a)} key={s.a}>
+                    <div
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    >
+                      <s.Icon
+                        className="icon d-flex d-lg-none"
+                        style={{
+                          fontSize: 27,
+                          color: selectedTab === s.a ? "#fbff01" : "#fff",
+                        }}
+                      />
+                      <h6
+                        className="d-none d-lg-flex"
+                        style={{
+                          color: selectedTab === s.a ? "#fbff01" : "#fff",
+                        }}
+                      >
+                        {s.a}
+                      </h6>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-            <Image
-              roundedCircle
-              style={{
-                objectFit: "cover",
-                width: "clamp(20px, 5vw, 55px)",
-                aspectRatio: "1/1",
-              }}
-              src="public/images/profile.jpg"
-            />
-
-            <div className="ms-auto gap-4 gap-sm-5 d-flex  align-items-center ">
-              <FiArrowLeft
-                style={{
-                  fontSize: "clamp(30px, 4vw, 35px)",
-                  cursor: "pointer",
-                }}
-                color="white"
-                onClick={() => navigate(-1)}
-              />
-              <FiBell
-                style={{
-                  fontSize: "clamp(22px, 3vw, 30px)",
-                  color: "#ffee02",
-                  cursor: "pointer",
-                }}
-              />
-              <FiSettings
-                style={{
-                  fontSize: "clamp(22px, 3vw, 30px)",
-                  color: "#ffee02",
-                  cursor: "pointer",
-                }}
-              />
+            <div className=" gap-3 d-flex  align-items-center ">
+              <div className="gap-4 gap-xl-5 d-flex  align-items-center ">
+                <Search
+                  style={{
+                    fontSize: 22,
+                    color: "#a0a0a0",
+                    cursor: "pointer",
+                  }}
+                />
+                <FiBell
+                  style={{
+                    fontSize: 22,
+                    color: "#a0a0a0",
+                    cursor: "pointer",
+                  }}
+                />
+              </div>
+              <div className="d-flex align-items-center gap-2">
+                {" "}
+                <Image
+                  roundedCircle
+                  style={{
+                    objectFit: "cover",
+                    width: "clamp(20px, 4vw, 40px)",
+                    aspectRatio: "1/1",
+                  }}
+                  src="public/images/profile.jpg"
+                />
+                <h6
+                  className=" d-md-none d-xl-block"
+                  style={{
+                    lineHeight: 1.3,
+                    color: "#fff",
+                    fontWeight: 700,
+                  }}
+                >
+                  Annointed Chips
+                </h6>
+                <ChevronDown />
+              </div>
             </div>
           </div>
         </Container>
       </div>
-      {title && (
-        <>
-          <div
-            className="d-flex align-items-center gap-3 gap-sm-4  p-3 p-sm-4   mt-2 mt-sm-4 mt-lg-5 "
-            style={{
-              position: "sticky",
-              top: "clamp(55px,   5px + 7.5vw, 95px )",
-              zIndex: 1030,
-              background: "#000e05",
-            }}
-          >
-            <h2 className="text-white">{title}</h2>
-            <div className="ms-auto">
-              {" "}
-              <button
-                className="d-flex align-items-center gap-3 px-2  "
-                type="button"
-                onClick={() => setSortOpen(true)}
-                style={{
-                  background: "rgba(210, 224, 22, 0.157)",
-                  borderRadius: 8,
-                  border: "none",
-                  color: "rgb(216, 231, 6)",
-                }}
-              >
-                <SortAlphaDown size={20} />
-                <h6 style={{ color: "rgb(216, 231, 6)" }}>Sort</h6>
-              </button>
+
+      <div
+        className="fixed-bottom d-md-none"
+        style={{ background: "#023810", borderTop: "1px solid #a5c70e69" }}
+      >
+        <Container>
+          <div className=" py-2">
+            <div className="d-flex  align-items-center  justify-content-between">
+              {[
+                { Icon: FiHome, a: "Overview" },
+                { Icon: FiPackage, a: "Products" },
+                { Icon: FaShoppingBasket, a: "Orders" },
+                { Icon: FaMoneyBill, a: "Earnings" },
+                { Icon: FaStore, a: "Store" },
+              ].map((s) => {
+                return (
+                  <div
+                    onClick={() => setSelectedTab(s.a)}
+                    className="d-flex flex-column align-items-center gap-1"
+                    key={s.a}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <s.Icon
+                      className="icon"
+                      style={{
+                        color: selectedTab === s.a ? "#fbff01" : "#fff",
+                        fontSize: "clamp(22px, 3vw, 30px)",
+                      }}
+                    />
+                    <p
+                      style={{
+                        color: selectedTab === s.a ? "#fff" : "",
+                      }}
+                    >
+                      {s.a}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </>
-      )}
+        </Container>
+      </div>
     </>
   );
 }
