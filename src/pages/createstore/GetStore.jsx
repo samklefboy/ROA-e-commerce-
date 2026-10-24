@@ -1,7 +1,7 @@
 import { useState } from "react";
-import MainHeader from "../MainHeader";
+import MainHeader from "../../components/MainHeader";
 import { HeroSection } from "../../pages/createstore/components/HeroSection";
-import Form from "../../components/forms/form";
+import FormCreation from "../../components/forms/FormCreation";
 
 export default function GetStore() {
   const [create, setCreate] = useState(false);
@@ -44,7 +44,13 @@ export default function GetStore() {
       <div>
         {create && (
           <>
-            <Form formData={storeData} setFormData={setStoreData} addProduct={false} />
+            <FormCreation
+              formData={storeData}
+              setFormData={setStoreData}
+              addProduct={false}
+              getStore={true}
+              title="Create your store"
+            />
           </>
         )}{" "}
       </div>

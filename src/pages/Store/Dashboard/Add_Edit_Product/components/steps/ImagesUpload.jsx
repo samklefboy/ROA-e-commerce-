@@ -1,21 +1,26 @@
 import { Form, Row, Col } from "react-bootstrap";
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useRef, useState, useMemo } from "react";
 import {
   BsArrowLeft,
   BsArrowRight,
   BsCloudUpload,
   BsPlus,
+  BsTrash,
 } from "react-icons/bs";
-import { fadedown, container } from "../../../../../../animation";
-import { motion, AnimatePresence } from "framer-motion";
+import { fadedown, container } from "../../../../../../utils/animation";
+import { motion } from "framer-motion";
 import { Check } from "react-bootstrap-icons";
-//import axios from "axios";
+import api from "../../../../../../services/api";
 
 const MAX_IMAGES = {
   REGULAR: 3,
   CAR: 10,
   REAL_ESTATE: 10,
 };
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const PHOTO_TIPS = {
   REGULAR: [
@@ -33,13 +38,26 @@ const PHOTO_TIPS = {
     "Any scratches or dents — be honest",
   ],
   REAL_ESTATE: [
-    "All room — wide angle",
+    "All rooms — wide angle",
     "All bedrooms",
     "Kitchen and bathrooms",
     "Exterior and entrance",
     "Estate or compound if applicable",
   ],
 };
+
+function getApiData(response) {
+  return response?.data?.data ?? response?.data;
+}
+
+function getErrorMessage(error) {
+  return (
+    error?.response?.data?.error?.message ||
+    error?.response?.data?.message ||
+    error?.message ||
+    "Image upload failed. Please try again."
+  );
+}
 
 export function ImagesUpload({
   setStep,
@@ -49,6 +67,19 @@ export function ImagesUpload({
   handleBack,
   validateStep,
 }) {
+  const fileInputRef = useRef(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const maxImages = MAX_IMAGES[formData.type] || 3;
+  const tips = PHOTO_TIPS[formData.type] || PHOTO_TIPS.REGULAR;
+  const images = useMemo(
+    () => (Array.isArray(formData.images) ? formData.images : []),
+    [formData.images],
+  );
+
   const next = () => {
     if (!validateStep()) return;
 
@@ -56,54 +87,88 @@ export function ImagesUpload({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const fileInputRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadError, setUploadError] = useState("");
+  const uploadImageToS3 = useCallback(async (file) => {
+    const signResponse = await api.post("/media/uploads/sign", {
+      purpose: "PRODUCT",
+      contentType: file.type,
+      fileSize: file.size,
+    });
 
-  const maxImages = MAX_IMAGES[formData.type] || 3;
-  const tips = PHOTO_TIPS[formData.type] || PHOTO_TIPS.REGULAR;
+    const signedUpload = getApiData(signResponse);
 
-  // upload to Cloudinary
-  {
-    /*  const uploadToCloudinary = async (file) => {
-      const data = new FormData();
-      data.append("file", file);
-      data.append("upload_preset", "roa_products"); // your Cloudinary preset
-      data.append("cloud_name", "your_cloud_name"); // your Cloudinary name
-  
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
-        { method: "POST", body: data }
+    if (
+      !signedUpload?.uploadUrl ||
+      !signedUpload?.fields ||
+      !signedUpload?.key
+    ) {
+      throw new Error("The server returned an invalid upload authorization.");
+    }
+
+    const uploadForm = new FormData();
+
+    Object.entries(signedUpload.fields).forEach(([key, value]) => {
+      uploadForm.append(key, value);
+    });
+
+    uploadForm.append("file", file);
+
+    const s3Response = await fetch(signedUpload.uploadUrl, {
+      method: "POST",
+      body: uploadForm,
+    });
+
+    if (!s3Response.ok) {
+      throw new Error(
+        "Could not upload the image to storage. Please try again.",
       );
-      const json = await res.json();
-      return json.secure_url;
-    }; */
-  }
+    }
 
-  // handle file selection
+    const verifyResponse = await api.post("/media/uploads/verify", {
+      purpose: "PRODUCT",
+      key: signedUpload.key,
+    });
 
-  {
-    /*  const handleFiles = useCallback(
-    async (files) => {
+    const verifiedImage = getApiData(verifyResponse);
+
+    if (!verifiedImage?.imageUrl) {
+      throw new Error("The server could not verify the uploaded image.");
+    }
+
+    return verifiedImage.imageUrl;
+  }, []);
+
+  const handleFiles = useCallback(
+    async (fileList) => {
       setUploadError("");
 
-      const remaining = maxImages - formData.images.length;
+      const selectedFiles = Array.from(fileList || []);
+
+      if (selectedFiles.length === 0) return;
+
+      const remaining = maxImages - images.length;
+
       if (remaining <= 0) {
-        setUploadError(`Maximum ${maxImages} photos allowed`);
+        setUploadError(`Maximum ${maxImages} photos allowed.`);
         return;
       }
 
-      const selected = Array.from(files).slice(0, remaining);
+      if (selectedFiles.length > remaining) {
+        setUploadError(
+          `You can add ${remaining} more photo${remaining === 1 ? "" : "s"}. Maximum ${maxImages} allowed.`,
+        );
+        return;
+      }
 
-      // validate each file
-      for (const file of selected) {
-        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-          setUploadError("Only JPG, PNG and WEBP images are allowed");
+      for (const file of selectedFiles) {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+          setUploadError("Only JPG, PNG and WEBP images are allowed.");
           return;
         }
-        if (file.size > 5 * 1024 * 1024) {
-          setUploadError("Each image must be under 5MB");
+
+        if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
+          setUploadError(
+            "Each image must be larger than 0 bytes and no more than 5 MB.",
+          );
           return;
         }
       }
@@ -111,89 +176,118 @@ export function ImagesUpload({
       try {
         setUploading(true);
 
-        // upload all selected files
-        const urls = await Promise.all(
-          selected.map((file) => uploadToCloudinary(file)),
+        // Preserve selection order, so the first selected photo
+        // becomes the cover if the user has not added photos yet.
+        const uploadedUrls = await Promise.all(
+          selectedFiles.map((file) => uploadImageToS3(file)),
         );
 
-        handleChange("images", [...formData.images, ...urls]);
-      } catch (err) {
-        console.error(err);
-        setUploadError("Upload failed. Please try again.");
+        handleChange("images", [...images, ...uploadedUrls]);
+      } catch (error) {
+        console.error("Product image upload failed:", error);
+        setUploadError(getErrorMessage(error));
       } finally {
         setUploading(false);
+
+        // Allow selecting the same file again after an error.
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
       }
     },
-    [formData.images, maxImages, handleChange],
-  ); */
-  }
+    [handleChange, images, maxImages, uploadImageToS3],
+  );
 
-  // remove image
   const removeImage = (index) => {
-    const updated = formData.images.filter((_, i) => i !== index);
+    const updated = images.filter((_, i) => i !== index);
     handleChange("images", updated);
+    setUploadError("");
   };
 
-  // move image (reorder)
   const moveImage = (fromIndex, toIndex) => {
-    if (toIndex < 0 || toIndex >= formData.images.length) return;
-    const updated = [...formData.images];
+    if (toIndex < 0 || toIndex >= images.length) return;
+
+    const updated = [...images];
     const [moved] = updated.splice(fromIndex, 1);
+
+    if (moved === undefined) return;
+
     updated.splice(toIndex, 0, moved);
     handleChange("images", updated);
   };
 
-  // drag and drop handlers
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragOver(true);
+  const handleDragOver = (event) => {
+    event.preventDefault();
+
+    if (!uploading && images.length < maxImages) {
+      setDragOver(true);
+    }
   };
+
   const handleDragLeave = () => {
     setDragOver(false);
   };
-  const handleDrop = (e) => {
-    e.preventDefault();
+
+  const handleDrop = (event) => {
+    event.preventDefault();
     setDragOver(false);
-    handleFiles(e.dataTransfer.files);
+
+    if (!uploading) {
+      void handleFiles(event.dataTransfer.files);
+    }
+  };
+
+  const openFilePicker = () => {
+    if (!uploading && images.length < maxImages) {
+      fileInputRef.current?.click();
+    }
   };
 
   return (
     <>
       <motion.div variants={container} initial="hidden" animate="visible">
-        {/* heading */}
+        {/* Heading */}
         <motion.div variants={fadedown} className="mb-5">
-          <h3 className=" fs-1 mb-3 fw-bold">Product photos</h3>
+          <h3 className="fs-1 mb-3 fw-bold">Product photos</h3>
           <h5>
-            Great photos increase your chances of selling by 80%. Add up to{" "}
-            {maxImages} photos.
+            Great photos help customers shop confidently. Add up to {maxImages}{" "}
+            photos.
           </h5>
         </motion.div>
 
-        {/* UPLOAD ZONE */}
+        {/* Upload zone */}
         <motion.div variants={fadedown} className="my-5 py-3">
           <div
             className="p-5"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => !uploading && fileInputRef.current?.click()}
+            onClick={openFilePicker}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openFilePicker();
+              }
+            }}
             style={{
               border: `1.5px dashed ${
                 dragOver
                   ? "#c7c420b9"
                   : errors.images
                     ? "#e62510b9"
-                    : formData.images.length >= maxImages
+                    : images.length >= maxImages
                       ? "rgba(255,255,255,0.06)"
-                      : "rgba(255, 255, 255, 0.35)"
+                      : "rgba(255,255,255,0.35)"
               }`,
               borderRadius: 14,
               textAlign: "center",
               cursor:
-                formData.images.length >= maxImages || uploading
+                images.length >= maxImages || uploading
                   ? "not-allowed"
                   : "pointer",
-              background: dragOver ? "rgba(26, 25, 2, 0.67)" : "#011301",
+              background: dragOver ? "rgba(26,25,2,0.67)" : "#011301",
               transition: "all 0.2s",
             }}
           >
@@ -210,9 +304,12 @@ export function ImagesUpload({
                     margin: "0 auto 12px",
                   }}
                 />
-                <p>Uploading photos...</p>
+                <p>Uploading and verifying photos...</p>
+                <p className="small text-white-50">
+                  Please keep this page open until the upload finishes.
+                </p>
               </div>
-            ) : formData.images.length >= maxImages ? (
+            ) : images.length >= maxImages ? (
               <div className="text-center">
                 <Check
                   className="mx-auto"
@@ -240,14 +337,15 @@ export function ImagesUpload({
                   style={{
                     fontSize: 30,
                     display: "block",
-                    marginBottom: 10,
+                    margin: "0 auto 10px",
                   }}
                 />
                 <div className="pb-4">
                   <p className="text-white mb-1">
                     Tap to upload or drag photos here
                   </p>
-                  <p className="mb-3">JPG, PNG or WEBP · Max 5MB each</p>
+                  <p className="mb-3">JPG, PNG or WEBP · Max 5 MB each</p>
+
                   <div
                     className="d-inline-block px-2 py-1"
                     style={{
@@ -260,7 +358,7 @@ export function ImagesUpload({
                       letterSpacing: 1,
                     }}
                   >
-                    {formData.images.length}/{maxImages} photos added
+                    {images.length}/{maxImages} photos added
                   </div>
                 </div>
               </>
@@ -273,42 +371,50 @@ export function ImagesUpload({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
-            onChange={(e) => handleFiles(e.target.files)}
+            disabled={uploading || images.length >= maxImages}
+            onChange={(event) => {
+              void handleFiles(event.target.files);
+            }}
             style={{ display: "none" }}
           />
 
           {/* Upload error */}
           {uploadError && (
-            <p style={{ fontSize: 12, color: "#c0392b", marginTop: 6 }}>
+            <p
+              role="alert"
+              style={{ fontSize: 12, color: "#e57373", marginTop: 8 }}
+            >
               {uploadError}
             </p>
           )}
 
           {/* Validation error */}
           {errors.images && (
-            <p style={{ fontSize: 12, color: "#c0392b", marginTop: 6 }}>
+            <p
+              role="alert"
+              style={{ fontSize: 12, color: "#e57373", marginTop: 6 }}
+            >
               {errors.images}
             </p>
           )}
         </motion.div>
 
-        {/* IMAGE GRID */}
+        {/* Image grid */}
         <motion.div variants={fadedown} className="my-5 py-3">
           <div className="d-sm-flex align-items-center justify-content-sm-between mb-4">
             <Form.Label className="mb-1">
-              Your photos — drag to reorder
+              Your photos — use the arrows to reorder
             </Form.Label>
             <p>First photo = cover image</p>
           </div>
 
           <Row className="g-3">
-            {formData.images.map((url, index) => (
-              <Col key={url} className="col-6 col-sm-4 col-lg-3">
-                {" "}
+            {images.map((url, index) => (
+              <Col key={`${url}-${index}`} className="col-6 col-sm-4 col-lg-3">
                 <div
                   style={{
                     position: "relative",
-                    aspectRatio: "1/1",
+                    aspectRatio: "1 / 1",
                     borderRadius: 10,
                     overflow: "hidden",
                     border:
@@ -318,6 +424,7 @@ export function ImagesUpload({
                   <img
                     src={url}
                     alt={`Product ${index + 1}`}
+                    loading="lazy"
                     style={{
                       width: "100%",
                       height: "100%",
@@ -345,69 +452,75 @@ export function ImagesUpload({
                     </div>
                   )}
 
-                  {/* Controls overlay */}
+                  {/* Image controls */}
                   <div
-                    className="d-flex align-items-center justify-content-center gap-4 gap-lg-5"
+                    className="d-flex align-items-center justify-content-center gap-3"
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background: "rgba(0, 0, 0, 0.46)",
-                      borderRadius: 10,
+                      background: "rgba(0,0,0,0.62)",
                       opacity: 0,
                       transition: "opacity 0.2s",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
-                    onMouseLeave={(e) => (e.currentTarget.style.opacity = 0)}
+                    onMouseEnter={(event) => {
+                      event.currentTarget.style.opacity = 1;
+                    }}
+                    onMouseLeave={(event) => {
+                      event.currentTarget.style.opacity = 0;
+                    }}
                   >
-                    {/* Move left */}
                     {index > 0 && (
                       <button
-                        onClick={() => moveImage(index, index - 1)}
                         type="button"
+                        onClick={() => moveImage(index, index - 1)}
                         title="Move left"
+                        aria-label={`Move photo ${index + 1} left`}
                         className="text-white next-btn"
-                        style={{ fontSize: 25 }}
+                        style={{ fontSize: 24 }}
                       >
-                        <ArrowLeft />
+                        <BsArrowLeft />
                       </button>
                     )}
 
-                    {/* Remove */}
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
                       className="text-danger"
+                      title="Remove photo"
+                      aria-label={`Remove photo ${index + 1}`}
                       style={{
                         background: "none",
                         border: "none",
+                        fontSize: 23,
                       }}
-                      title="Remove"
                     >
-                      <Trash style={{ fontSize: 25 }} />
+                      <BsTrash />
                     </button>
 
-                    {/* Move right */}
-                    {index < formData.images.length - 1 && (
+                    {index < images.length - 1 && (
                       <button
                         type="button"
                         onClick={() => moveImage(index, index + 1)}
                         title="Move right"
+                        aria-label={`Move photo ${index + 1} right`}
                         className="text-white next-btn"
+                        style={{ fontSize: 24 }}
                       >
-                        <ArrowRight style={{ fontSize: 25 }} />
+                        <BsArrowRight />
                       </button>
                     )}
                   </div>
 
                   {/* Image number */}
                   <p
-                    className="p-1 px-3 p-sm-1 px-sm-3 px-lg-4 p-lg-2 text-white text-white"
+                    className="p-1 px-3 text-white"
                     style={{
                       position: "absolute",
                       bottom: 5,
                       right: 5,
-                      background: "rgba(0,0,0,0.5)",
-                      borderRadius: "50%",
+                      background: "rgba(0,0,0,0.6)",
+                      borderRadius: 20,
+                      margin: 0,
                     }}
                   >
                     {index + 1}
@@ -417,46 +530,41 @@ export function ImagesUpload({
             ))}
 
             {/* Add more slot */}
-            {formData.images.length < maxImages && (
+            {images.length < maxImages && (
               <Col className="col-6 col-sm-4 col-lg-3">
-                <div
-                  className="d-flex flex-column align-items-center justify-content-center"
-                  onClick={() => fileInputRef.current?.click()}
+                <button
+                  type="button"
+                  onClick={openFilePicker}
+                  disabled={uploading}
+                  className="d-flex flex-column align-items-center justify-content-center w-100 text-white"
                   style={{
-                    aspectRatio: "1/1",
+                    aspectRatio: "1 / 1",
                     position: "relative",
                     borderRadius: 10,
-                    border: "1px dashed rgba(255, 255, 255, 0.32)",
-                    cursor: "pointer",
+                    border: "1px dashed rgba(255,255,255,0.32)",
+                    cursor: uploading ? "not-allowed" : "pointer",
                     background: "rgba(255,255,255,0.02)",
-                    transition: "all 0.15s",
                   }}
                 >
                   <BsPlus size={25} />
-                  <p>Add more</p>
-                </div>
+                  <span>Add more</span>
+                </button>
               </Col>
             )}
           </Row>
         </motion.div>
 
-        {/* PHOTO TIPS */}
+        {/* Photo tips */}
         <motion.div variants={fadedown} className="my-5 py-3">
           <div
-            className="p-4  text-sm-center"
+            className="p-4 text-sm-center"
             style={{
-              background: "rgba(29, 158, 117, 0.24)",
-              border: "0.5px solid rgba(29, 158, 117, 0.46)",
+              background: "rgba(29,158,117,0.24)",
+              border: "0.5px solid rgba(29,158,117,0.46)",
               borderRadius: 12,
             }}
           >
-            <h5
-              className="mb-3"
-              style={{
-                color: "#1D9E75",
-                fontWeight: 600,
-              }}
-            >
+            <h5 className="mb-3" style={{ color: "#1D9E75", fontWeight: 600 }}>
               📸 Tips for great{" "}
               {formData.type === "CAR"
                 ? "vehicle"
@@ -466,7 +574,7 @@ export function ImagesUpload({
               photos:
             </h5>
 
-            <div className="d-flex flex-column gap-3 ">
+            <div className="d-flex flex-column gap-3">
               {tips.map((tip) => (
                 <div className="d-flex align-items-center gap-3" key={tip}>
                   <Check
@@ -477,12 +585,7 @@ export function ImagesUpload({
                       marginTop: 2,
                     }}
                   />
-                  <p
-                    className="text-start"
-                    style={{
-                      lineHeight: 1.5,
-                    }}
-                  >
+                  <p className="text-start" style={{ lineHeight: 1.5 }}>
                     {tip}
                   </p>
                 </div>
@@ -492,17 +595,24 @@ export function ImagesUpload({
         </motion.div>
       </motion.div>
 
+      {/* Navigation */}
       <div className="d-flex align-items-center justify-content-between">
         <button
           type="button"
           onClick={handleBack}
-          className="px-3 py-2  next-btn"
+          disabled={uploading}
+          className="px-3 py-2 next-btn"
         >
-          <BsArrowLeft style={{ color: "#facc15", fontSize: "35px" }} />
+          <BsArrowLeft style={{ color: "#facc15", fontSize: 35 }} />
         </button>
 
-        <button type="button" onClick={next} className="px-3 py-2 next-btn">
-          <BsArrowRight style={{ color: "#facc15", fontSize: "35px" }} />
+        <button
+          type="button"
+          onClick={next}
+          disabled={uploading}
+          className="px-3 py-2 next-btn"
+        >
+          <BsArrowRight style={{ color: "#facc15", fontSize: 35 }} />
         </button>
       </div>
     </>

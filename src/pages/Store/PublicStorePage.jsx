@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Image, Nav, Stack } from "react-bootstrap";
 import { Link } from "react-router-dom";
-// import WhatsAppFloat from "./WhatsappFloat";
 import ProductPage from "../../components/product/ProductPage.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { fadeUp } from "../../animation";

@@ -504,8 +504,8 @@ export const PRODUCTS = [
   },
 
   // ---- CAR LISTING ----
+
   {
-    /*  {
     id: "prod-006",
     storeId: "store-001",
     store: STORES[0],
@@ -550,7 +550,7 @@ export const PRODUCTS = [
       contactMethod: ["WhatsApp", "Phone call"],
     },
     createdAt: "2026-07-20T10:00:00.000Z",
-  }, 
+  },
 
   // ---- REAL ESTATE ----
   {
@@ -602,8 +602,8 @@ export const PRODUCTS = [
       location: "Lekki Phase 1, Lagos",
     },
     createdAt: "2026-07-18T09:00:00.000Z",
-  }, */
   },
+  ,
 ];
 
 // ============================================================

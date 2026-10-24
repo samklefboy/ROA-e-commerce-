@@ -1,24 +1,43 @@
-import { Form, Row, Col } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { useMemo } from "react";
 import { BsArrowLeft, BsArrowRight, BsInfo } from "react-icons/bs";
-import { fadedown, container } from "../../../../../../animation";
+import { fadedown, container } from "../../../../../../utils/animation";
 import { motion } from "framer-motion";
 import { LockFill } from "react-bootstrap-icons";
 import { FiPackage } from "react-icons/fi";
 
 const PRICE_DISPLAY_OPTIONS = [
-  { value: "exact", label: "Show exact price", desc: "Buyers see ₦ 8,500,000" },
+  {
+    value: "exact",
+    label: "Show exact price",
+    desc: "Buyers see your listing price.",
+  },
   {
     value: "contact",
     label: "Contact for price",
-    desc: "Buyers must message you",
+    desc: "Buyers must contact you.",
   },
   {
     value: "on_request",
     label: "Price on request",
-    desc: "Shows POA on listing",
+    desc: "Shows POA on the listing.",
   },
 ];
+
+const formatNaira = (amount) =>
+  new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+
+const toNumber = (value) => {
+  if (value === "" || value === null || value === undefined) return 0;
+
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : 0;
+};
 
 export function Price({
   setStep,
@@ -27,177 +46,192 @@ export function Price({
   errors,
   handleBack,
   validateStep,
+
+  // Pass this value from the backend's PlatformCommissionPolicy.rateBps.
+  // Example: 500 = 5%, 250 = 2.5%.
+  commissionRateBps = null,
+
+  // Optional status props from the parent.
+  commissionLoading = false,
+  commissionError = null,
 }) {
+  const isRegular = formData.type === "REGULAR";
+  const isCar = formData.type === "CAR";
+  const isRealEstate =
+    formData.type === "REAL_ESTATE" || formData.type === "REALESTATE";
+
+  const hasExactPrice =
+    formData.priceDisplay !== "contact" &&
+    formData.priceDisplay !== "on_request";
+
+  const price = toNumber(formData.price);
+  const costPrice = toNumber(formData.costPrice);
+
+  const validCommissionRate =
+    commissionRateBps !== null &&
+    commissionRateBps !== undefined &&
+    commissionRateBps !== "" &&
+    Number.isInteger(Number(commissionRateBps)) &&
+    Number(commissionRateBps) >= 0 &&
+    Number(commissionRateBps) <= 10_000;
+
+  // rateBps is expressed in basis points: 10,000 bps = 100%.
+  const commissionRate = validCommissionRate
+    ? Number(commissionRateBps) / 10_000
+    : null;
+
+  const calculations = useMemo(() => {
+    if (!hasExactPrice || price <= 0 || commissionRate === null) {
+      return null;
+    }
+
+    const commissionAmount = price * commissionRate;
+    const estimatedPayout = price - commissionAmount;
+
+    const estimatedProfit = costPrice > 0 ? estimatedPayout - costPrice : null;
+
+    const estimatedProfitMargin =
+      estimatedProfit !== null ? (estimatedProfit / price) * 100 : null;
+
+    return {
+      commissionAmount,
+      estimatedPayout,
+      estimatedProfit,
+      estimatedProfitMargin,
+      commissionPercentage: commissionRate * 100,
+    };
+  }, [hasExactPrice, price, costPrice, commissionRate]);
+
   const next = () => {
     if (!validateStep()) return;
+
+    if (commissionLoading) return;
+
+    if (commissionError || !validCommissionRate) {
+      return;
+    }
 
     setStep(6);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const isRegular = formData.type === "REGULAR";
-  const isCar = formData.type === "CAR";
-  const isRealEstate = formData.type === "REAL_ESTATE";
-
-  const price = parseFloat(formData.price) || 0;
-  const oldPrice = parseFloat(formData.oldPrice) || 0;
-  const costPrice = parseFloat(formData.costPrice) || 0;
-
-  // auto calculations — useMemo
-  const calculations = useMemo(() => {
-    if (!price) return null;
-
-    const roaCommission = price * 0.05;
-    const youReceive = price - roaCommission;
-    const profitPerSale = costPrice ? youReceive - costPrice : null;
-    const profitMargin =
-      costPrice && profitPerSale
-        ? ((profitPerSale / price) * 100).toFixed(1)
-        : null;
-    const discountPercent =
-      oldPrice > price
-        ? Math.round(((oldPrice - price) / oldPrice) * 100)
-        : null;
-
-    return {
-      roaCommission,
-      youReceive,
-      profitPerSale,
-      profitMargin,
-      discountPercent,
-    };
-  }, [price, oldPrice, costPrice]);
-
   return (
     <>
       <motion.div variants={container} initial="hidden" animate="visible">
         <motion.div variants={fadedown} className="mb-5">
-          {/* heading */}
-          <h3 className=" fs-1 mb-3 fw-bold">
-            {" "}
+          <h3 className="fs-1 mb-3 fw-bold">
             {isRegular
               ? "Pricing & stock"
               : isCar
                 ? "Asking price"
                 : "Listing price"}
           </h3>
+
           <h5>
-            {" "}
             {isRegular
               ? "Set your price and stock. Your cost price is private — only you can see it."
               : "Set your asking price and how it appears to buyers."}
           </h5>
         </motion.div>
 
-        {/* Price display — car and  real_eastate only */}
+        {/* Price display options are for car and property listings. */}
         {(isCar || isRealEstate) && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <Form.Label>How to display price</Form.Label>
+
             <div>
-              {PRICE_DISPLAY_OPTIONS.map((opt) => {
-                return (
-                  <Form.Check
-                    className="py-2 d-flex gap-3 align-items-center"
-                    value={opt.value}
-                    checked={formData.priceDisplay === opt.value}
-                    onChange={(e) =>
-                      handleChange("priceDisplay", e.target.value)
-                    }
-                    label={
-                      <>
-                        <p>{opt.label}</p>
-                        <p>{opt.desc}</p>
-                      </>
-                    }
-                    type="radio"
-                  />
-                );
-              })}
+              {PRICE_DISPLAY_OPTIONS.map((option) => (
+                <Form.Check
+                  key={option.value}
+                  className="py-2 d-flex gap-3 align-items-center"
+                  type="radio"
+                  name="priceDisplay"
+                  value={option.value}
+                  checked={(formData.priceDisplay || "exact") === option.value}
+                  onChange={(event) =>
+                    handleChange("priceDisplay", event.target.value)
+                  }
+                  label={
+                    <>
+                      <p className="mb-1">{option.label}</p>
+                      <p className="mb-0">{option.desc}</p>
+                    </>
+                  }
+                />
+              ))}
             </div>
           </motion.div>
         )}
 
-        {/* main price */}
-        {formData.priceDisplay !== "contact" &&
-          formData.priceDisplay !== "on_request" && (
-            <motion.div variants={fadedown} className="my-5 py-3">
-              <Form.Label>
-                {" "}
-                {isRegular
-                  ? "Selling price (₦ ) *"
-                  : isCar
-                    ? "Asking price (₦ ) *"
-                    : isRealEstate &&
-                        formData.listingMeta?.listingType === "For rent"
-                      ? "Price per year (₦ ) *"
-                      : "Sale price (₦ ) *"}
-              </Form.Label>
-
-              <div className="d-flex align-items-center gap-3 gap-lg-5">
-                <h4>₦ </h4>
-                <Form.Control
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.price}
-                  onChange={(e) => handleChange("price", e.target.value)}
-                />
-              </div>
-              {errors.price && (
-                <p className="text-danger fw-bold">{errors.price}</p>
-              )}
-            </motion.div>
-          )}
-
-        {/* comparison at prices - regular only */}
-        {isRegular && (
+        {/* Main price */}
+        {hasExactPrice && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <Form.Label>
-              Original / old price (₦ )
-              <p>optional — shows strikethrough to buyers</p>
+              {isRegular
+                ? "Selling price (₦) *"
+                : isCar
+                  ? "Asking price (₦) *"
+                  : isRealEstate &&
+                      formData.listingMeta?.listingType === "For rent"
+                    ? "Price per year (₦) *"
+                    : "Sale price (₦) *"}
             </Form.Label>
 
             <div className="d-flex align-items-center gap-3 gap-lg-5">
-              <h4>₦ </h4>
+              <h4>₦</h4>
+
               <Form.Control
                 type="number"
+                min="0"
+                step="0.01"
                 placeholder="0.00"
-                value={formData.oldPrice}
-                onChange={(e) => handleChange("oldPrice", e.target.value)}
+                value={formData.price ?? ""}
+                onChange={(event) => handleChange("price", event.target.value)}
+                aria-invalid={Boolean(errors.price)}
               />
             </div>
+
+            {errors.price && (
+              <p className="text-danger fw-bold">{errors.price}</p>
+            )}
           </motion.div>
         )}
 
-        {/* cost price - regular, private */}
+        {/* Private cost price: regular products only */}
         {isRegular && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <Form.Label>
-              {" "}
-              Your cost price (₦ )<p>private — only you can see this</p>
+              Your cost price (₦)
+              <p className="mb-0">Private — only you can see this.</p>
             </Form.Label>
 
             <div className="d-flex align-items-center gap-3 gap-lg-5">
-              <h4>₦ </h4>
+              <h4>₦</h4>
+
               <Form.Control
                 type="number"
+                min="0"
+                step="0.01"
                 placeholder="0.00"
-                value={formData.costPrice}
-                onChange={(e) => handleChange("costPrice", e.target.value)}
+                value={formData.costPrice ?? ""}
+                onChange={(event) =>
+                  handleChange("costPrice", event.target.value)
+                }
               />
             </div>
 
             <div className="d-flex align-items-center gap-4 mt-3">
               <LockFill size={20} />
-              <p>
-                {" "}
-                Used to calculate your profit margin. Never shown to buyers.
+              <p className="mb-0">
+                Used for your estimated profit calculation. Never shown to
+                buyers.
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* AUTO CALCULATION CARD */}
-        {calculations && price > 0 && (
+        {/* Earnings estimate: only shown when the backend rate is available. */}
+        {hasExactPrice && price > 0 && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <div
               className="p-3 p-sm-4"
@@ -214,76 +248,108 @@ export function Price({
                   letterSpacing: 1,
                 }}
               >
-                Earnings breakdown
+                Estimated earnings
               </p>
 
-              {[
-                {
-                  label: "Selling price",
-                  val: `₦ ${price.toLocaleString()}`,
-                  color: "#eee",
-                },
-                {
-                  label: "r.o.a. commission (5%)",
-                  val: `-₦ ${calculations.roaCommission.toLocaleString()}`,
-                  color: "#c0392b",
-                },
-                {
-                  label: "You receive",
-                  val: `₦ ${calculations.youReceive.toLocaleString()}`,
-                  color: "#1D9E75",
-                  bold: true,
-                },
-                ...(calculations.profitPerSale !== null
-                  ? [
-                      {
-                        label: "Profit per sale",
-                        val: `₦ ${calculations.profitPerSale.toLocaleString()}`,
-                        color: "#c9a84c",
-                      },
-                    ]
-                  : []),
-                ...(calculations.profitMargin !== null
-                  ? [
-                      {
-                        label: "Profit margin",
-                        val: `${calculations.profitMargin}%`,
-                        color: "#c9a84c",
-                      },
-                    ]
-                  : []),
-              ].map((row, i) => (
-                <div
-                  className="d-flex justify-content-between align-items-center"
-                  key={row.label}
-                  style={{
-                    padding: "8px 0",
-                    borderTop: i === 2 ? "0.5px solid #d6da1b6b" : "none",
-                    marginTop: i === 2 ? 4 : 0,
-                  }}
-                >
-                  <p>{row.label}</p>
-                  <p
-                    style={{
-                      fontSize: row.bold ? 15 : 13,
-                      color: row.color,
-                      fontWeight: row.bold ? 700 : 500,
-                      fontFamily: row.bold ? "'Syne',sans-serif" : "inherit",
-                    }}
-                  >
-                    {row.val}
+              {commissionLoading ? (
+                <p className="mb-0">Loading ROA commission policy...</p>
+              ) : commissionError ? (
+                <p className="text-warning mb-0">
+                  The commission policy could not be loaded. Your earnings
+                  estimate is temporarily unavailable.
+                </p>
+              ) : !validCommissionRate ? (
+                <p className="mb-0">
+                  Your earnings estimate will appear when ROA's commission
+                  policy is available.
+                </p>
+              ) : calculations ? (
+                <>
+                  {[
+                    {
+                      label: "Listing price",
+                      value: formatNaira(price),
+                      color: "#eee",
+                    },
+                    {
+                      label: `Estimated ROA commission (${calculations.commissionPercentage.toLocaleString(
+                        "en-NG",
+                        { maximumFractionDigits: 4 },
+                      )}%)`,
+                      value: `−${formatNaira(calculations.commissionAmount)}`,
+                      color: "#f08b83",
+                    },
+                    {
+                      label: "Estimated payout before adjustments",
+                      value: formatNaira(calculations.estimatedPayout),
+                      color: "#1D9E75",
+                      bold: true,
+                    },
+                    ...(calculations.estimatedProfit !== null
+                      ? [
+                          {
+                            label: "Estimated profit per sale",
+                            value: formatNaira(calculations.estimatedProfit),
+                            color: "#c9a84c",
+                          },
+                        ]
+                      : []),
+                    ...(calculations.estimatedProfitMargin !== null
+                      ? [
+                          {
+                            label: "Estimated profit margin",
+                            value: `${calculations.estimatedProfitMargin.toFixed(
+                              1,
+                            )}%`,
+                            color: "#c9a84c",
+                          },
+                        ]
+                      : []),
+                  ].map((row, index) => (
+                    <div
+                      className="d-flex justify-content-between align-items-center gap-3"
+                      key={row.label}
+                      style={{
+                        padding: "8px 0",
+                        borderTop:
+                          index === 2 ? "0.5px solid #d6da1b6b" : "none",
+                        marginTop: index === 2 ? 4 : 0,
+                      }}
+                    >
+                      <p className="mb-0">{row.label}</p>
+
+                      <p
+                        className="mb-0 text-end"
+                        style={{
+                          fontSize: row.bold ? 15 : 13,
+                          color: row.color,
+                          fontWeight: row.bold ? 700 : 500,
+                          fontFamily: row.bold
+                            ? "'Syne',sans-serif"
+                            : "inherit",
+                        }}
+                      >
+                        {row.value}
+                      </p>
+                    </div>
+                  ))}
+
+                  <p className="small mt-3 mb-0">
+                    This is an estimate, not a guaranteed settlement amount.
+                    Refunds, disputes, and other applicable adjustments may
+                    affect the final payout.
                   </p>
-                </div>
-              ))}
+                </>
+              ) : null}
             </div>
           </motion.div>
         )}
 
-        {/* STOCK — REGULAR only and no variants */}
-
+        {/* Stock: regular products without variants */}
         {isRegular && !formData.hasVariants && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <Form.Label>Stock quantity *</Form.Label>
+
             <div
               className="d-flex align-items-center gap-2 gap-sm-4"
               style={{
@@ -293,45 +359,50 @@ export function Price({
               }}
             >
               <FiPackage size={30} />
+
               <Form.Control
                 type="number"
+                min="1"
+                step="1"
                 placeholder="How many units do you have?"
-                value={formData.stock}
-                onChange={(e) => handleChange("stock", e.target.value)}
-                min={1}
+                value={formData.stock ?? ""}
+                onChange={(event) => handleChange("stock", event.target.value)}
+                aria-invalid={Boolean(errors.stock)}
               />
             </div>
+
             {errors.stock && (
               <p className="text-danger fw-bold">{errors.stock}</p>
             )}
 
-            {/* Low stock alert */}
             <div className="mt-5">
               <Form.Label>
                 Low stock alert
-                <p>notify me when stock reaches this number</p>
+                <p className="mb-0">
+                  Notify me when stock reaches this number.
+                </p>
               </Form.Label>
-              {[3, 5, 10, 15, 20].map((n) => (
+
+              {[3, 5, 10, 15, 20].map((quantity) => (
                 <Form.Check
-                  className="py-2 "
+                  key={quantity}
+                  className="py-2"
                   type="radio"
-                  key={n}
-                  checked={formData.lowStockAlert === n}
-                  value={n}
-                  label={<>{n} units</>}
-                  onChange={(e) =>
-                    handleChange("lowStockAlert", e.target.value)
-                  }
+                  name="lowStockAlert"
+                  checked={Number(formData.lowStockAlert) === quantity}
+                  value={quantity}
+                  label={`${quantity} units`}
+                  onChange={() => handleChange("lowStockAlert", quantity)}
                 />
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* variants stock info */}
+        {/* Stock information for variants */}
         {isRegular &&
           formData.hasVariants &&
-          formData.productVariants.length > 0 && (
+          formData.productVariants?.length > 0 && (
             <motion.div variants={fadedown} className="my-5 py-3">
               <div
                 className="d-flex align-items-center gap-3 gap-lg-5"
@@ -343,16 +414,13 @@ export function Price({
                 }}
               >
                 <BsInfo size={40} />
-                <p
-                  style={{
-                    lineHeight: 1.6,
-                  }}
-                >
+
+                <p style={{ lineHeight: 1.6 }} className="mb-0">
                   You set stock per variant in Step 4. Total stock across all
                   variants:
                   <strong style={{ color: "#b4c70a", marginLeft: 4 }}>
                     {formData.productVariants.reduce(
-                      (sum, v) => sum + (parseInt(v.stock) || 0),
+                      (total, variant) => total + toNumber(variant.stock),
                       0,
                     )}{" "}
                     units
@@ -362,23 +430,24 @@ export function Price({
             </motion.div>
           )}
 
-        {/* Sku */}
+        {/* SKU: regular products only */}
         {isRegular && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <Form.Label>
               SKU / Product code
-              <p>optional — your internal reference code</p>
+              <p className="mb-0">Optional — your internal reference code.</p>
             </Form.Label>
+
             <Form.Control
               type="text"
               placeholder="e.g. NK-AM-270-BLK-42"
-              value={formData.sku}
-              onChange={(e) => handleChange("sku", e.target.value)}
+              value={formData.sku ?? ""}
+              onChange={(event) => handleChange("sku", event.target.value)}
             />
           </motion.div>
         )}
 
-        {/* CAR — negotiable reminder */}
+        {/* Car negotiability reminder */}
         {isCar && (
           <motion.div variants={fadedown} className="my-5 py-3">
             <div
@@ -390,15 +459,11 @@ export function Price({
               }}
             >
               <BsInfo size={50} />
-              <p
-                style={{
-                  lineHeight: 1.6,
-                }}
-              >
-                If you set whether the price is negotiable.
+
+              <p style={{ lineHeight: 1.6 }} className="mb-0">
                 {formData.listingMeta?.negotiable
-                  ? " Your listing shows as negotiable ✓"
-                  : " Your listing shows as fixed price."}
+                  ? "Your listing shows as negotiable."
+                  : "Your listing shows as a fixed price."}
               </p>
             </div>
           </motion.div>
@@ -406,11 +471,26 @@ export function Price({
       </motion.div>
 
       <div className="d-flex align-items-center justify-content-between">
-        <button onClick={handleBack} className="px-3 py-2  next-btn">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="px-3 py-2 next-btn"
+          aria-label="Go back"
+        >
           <BsArrowLeft style={{ color: "#facc15", fontSize: "35px" }} />
         </button>
 
-        <button onClick={next} className="px-3 py-2 next-btn">
+        <button
+          type="button"
+          onClick={next}
+          disabled={
+            commissionLoading ||
+            Boolean(commissionError) ||
+            !validCommissionRate
+          }
+          className="px-3 py-2 next-btn"
+          aria-label="Continue to next step"
+        >
           <BsArrowRight style={{ color: "#facc15", fontSize: "35px" }} />
         </button>
       </div>

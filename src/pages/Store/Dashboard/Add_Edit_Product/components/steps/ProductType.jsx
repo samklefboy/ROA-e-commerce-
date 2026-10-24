@@ -2,7 +2,7 @@ import { Row, Col, Container } from "react-bootstrap";
 import { BsArrowRight, BsBuilding } from "react-icons/bs";
 import { FaTruckMoving } from "react-icons/fa";
 import { FiAlertTriangle, FiShoppingBag } from "react-icons/fi";
-import { fadedown, container } from "../../../../../../animation";
+import { fadedown, container } from "../../../../../../utils/animation";
 import { motion } from "framer-motion";
 
 import { Check } from "react-bootstrap-icons";

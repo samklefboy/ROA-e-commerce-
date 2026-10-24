@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { FaArrowLeft, FaShoppingBag } from "react-icons/fa";
 import axios from "axios";
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { getWalletTransactions } from "../../../services/walletService";
 import { SummaryCard } from "./components/SummaryCard";
 import { SearchBar } from "./components/Searchbar";
 import { FilterChip } from "./components/Filter";
@@ -151,7 +152,7 @@ export function Transactions() {
   const PAGE_SIZE = 20;
 
   const dateRange = useMemo(() => {
-    datePreset !== "custom"
+    return datePreset !== "custom"
       ? getDateRangeFromPreset(datePreset)
       : customFrom && customTo
         ? { from: new Date(customFrom), to: new Date(customTo) }
@@ -165,27 +166,25 @@ export function Transactions() {
         if (pageNum === 1) setLoading(true);
         else setLoadingMore(true);
 
-        const { data } = await axios.get("/api/wallet/transactions", {
-          params: {
-            page: pageNum,
-            limit: PAGE_SIZE,
-            type:
-              activeFilter === "ALL" ||
-              activeFilter === "CREDIT" ||
-              activeFilter === "DEBIT"
-                ? undefined
-                : activeFilter,
-            credit: activeFilter === "CREDIT" ? true : undefined,
-            debit: activeFilter === "DEBIT" ? true : undefined,
-            search: search.trim() || undefined,
-            dateFrom: dateRange?.from?.toISOString() || undefined,
-            dateTo: dateRange?.to?.toISOString() || undefined,
-            status: undefined, // pass "FAILED" to filter failed only
-          },
+        const response = await getWalletTransactions({
+          page: pageNum,
+          limit: PAGE_SIZE,
+          type:
+            activeFilter === "ALL" ||
+            activeFilter === "CREDIT" ||
+            activeFilter === "DEBIT"
+              ? undefined
+              : activeFilter,
+          credit: activeFilter === "CREDIT" ? true : undefined,
+          debit: activeFilter === "DEBIT" ? true : undefined,
+          search: search.trim() || undefined,
+          dateFrom: dateRange?.from?.toISOString(),
+          dateTo: dateRange?.to?.toISOString(),
         });
 
-        const incomingTransactions = Array.isArray(data.transactions)
-          ? data.transactions
+        const payload = response?.data ?? response;
+        const incomingTransactions = Array.isArray(payload.transactions)
+          ? payload.transactions
           : [];
 
         if (reset || pageNum === 1) {
@@ -193,8 +192,9 @@ export function Transactions() {
         } else {
           setTransactions((prev) => [...prev, ...incomingTransactions]);
         }
-        setHasMore(data.hasMore);
-        setPage(pageNum || Number(data.page));
+
+        setHasMore(payload.hasMore);
+        setPage(Number(payload.page) || pageNum);
       } catch (err) {
         console.error("Transactions fetch failed:", err);
         if (pageNum === 1) {

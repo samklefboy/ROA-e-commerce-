@@ -756,7 +756,7 @@ const ShoppingPage = () => {
                     <span key={l} className="activeFilterChip">
                       {l}{" "}
                       <span
-                        onClick={() => removeFilter("location", location)}
+                        onClick={() => removeFilter("location", l)}
                         style={{ cursor: "pointer", color: "#a0a0a0" }}
                       >
                         ✕

@@ -2,7 +2,7 @@ import { Form, Row, Col, Stack } from "react-bootstrap";
 import { useState, useMemo } from "react";
 import { BsArrowLeft, BsArrowRight, BsInfoCircle } from "react-icons/bs";
 import { Check } from "react-bootstrap-icons";
-import { fadedown, container } from "../../../../../../animation";
+import { fadedown, container } from "../../../../../../utils/animation";
 import { motion } from "framer-motion";
 import { FiAlertTriangle } from "react-icons/fi";
 

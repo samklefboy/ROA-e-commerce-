@@ -8,7 +8,7 @@ export const Overview = () => {
           className="mt-5 p-4"
           style={{
             border: "1px solid rgba(233, 229, 4, 0.4)",
-            background: "rgba(12, 12, 12, 0.29)",
+            background: "rgba(54, 44, 44, 0.29)",
           }}
         >
           <div

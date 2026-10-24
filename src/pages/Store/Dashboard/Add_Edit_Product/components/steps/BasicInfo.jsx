@@ -1,14 +1,8 @@
 import { Form, Row, Col } from "react-bootstrap";
 import { useState } from "react";
-import {
-  BsArrowLeft,
-  BsArrowRight,
-  BsLightbulbFill,
-  BsSortDown,
-  BsX,
-} from "react-icons/bs";
+import { BsArrowLeft, BsArrowRight, BsLightbulbFill } from "react-icons/bs";
 import { Check } from "react-bootstrap-icons";
-import { fadedown, container } from "../../../../../../animation";
+import { fadedown, container } from "../../../../../../utils/animation";
 import { motion } from "framer-motion";
 
 const CONDITIONS = {
@@ -17,14 +11,65 @@ const CONDITIONS = {
   REAL_ESTATE: ["New build", "Old build", "Renovated"],
 };
 
+const DESCRIPTION_TIPS = {
+  REGULAR: [
+    "Key features",
+    "Dimensions / size",
+    "Materials used",
+    "Package contents",
+    "Care instructions",
+    "Warranty information",
+  ],
+  CAR: [
+    "Vehicle history",
+    "Service records",
+    "Known issues",
+    "Reason for selling",
+    "Import year",
+    "Current location",
+  ],
+  REAL_ESTATE: [
+    "What is included",
+    "Estate details",
+    "Nearby landmarks",
+    "Transportation access",
+    "Agency fee information",
+    "Landlord terms",
+  ],
+};
+
+const TITLE_TIPS = {
+  REGULAR: {
+    description: "Include the brand, product name and a key feature.",
+    example: "Nike Air Max 270 — Running Shoes, Black, Size 42",
+  },
+  CAR: {
+    description: "Include the year, make, model and condition.",
+    example: "2019 Toyota Camry LE — Foreign Used, Black, Lagos",
+  },
+  REAL_ESTATE: {
+    description: "Include the bedrooms, property type and location.",
+    example: "3 Bedroom Duplex for Rent — Lekki Phase 1, Lagos",
+  },
+};
+
 export function BasicInfo({
   setStep,
   formData,
   handleChange,
-  errors,
+  errors = {},
   handleBack,
   validateStep,
 }) {
+  const [keywordInput, setKeywordInput] = useState("");
+
+  const keywords = Array.isArray(formData.keywords) ? formData.keywords : [];
+
+  const type = CONDITIONS[formData.type] ? formData.type : "REGULAR";
+  const conditions = CONDITIONS[type];
+  const titleTips = TITLE_TIPS[type];
+  const descriptionTips = DESCRIPTION_TIPS[type];
+
   const next = () => {
     if (!validateStep()) return;
 
@@ -32,34 +77,37 @@ export function BasicInfo({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const [keywordInput, setKeywordInput] = useState("");
+  const addKeyword = () => {
+    const keyword = keywordInput.trim().replace(/,+$/, "").trim();
 
-  const conditions = CONDITIONS[formData.type] || CONDITIONS.REGULAR;
+    if (!keyword) return;
 
-  // add keyword on Enter or comma
-  const handleKeywordKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
+    const duplicate = keywords.some(
+      (item) => item.toLowerCase() === keyword.toLowerCase(),
+    );
+
+    if (duplicate) {
+      setKeywordInput("");
+      return;
+    }
+
+    if (keywords.length >= 10) return;
+
+    handleChange("keywords", [...keywords, keyword]);
+    setKeywordInput("");
+  };
+
+  const handleKeywordKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
       addKeyword();
     }
   };
 
-  const addKeyword = () => {
-    const trimmed = keywordInput.trim().replace(",", "");
-    if (!trimmed) return;
-    if (formData.keywords.includes(trimmed)) {
-      setKeywordInput("");
-      return;
-    }
-    if (formData.keywords.length >= 10) return;
-    handleChange("keywords", [...formData.keywords, trimmed]);
-    setKeywordInput("");
-  };
-
-  const removeKeyword = (kw) => {
+  const removeKeyword = (keywordToRemove) => {
     handleChange(
       "keywords",
-      formData.keywords.filter((k) => k !== kw),
+      keywords.filter((keyword) => keyword !== keywordToRemove),
     );
   };
 
@@ -67,210 +115,185 @@ export function BasicInfo({
     <>
       <motion.div variants={container} initial="hidden" animate="visible">
         <motion.div variants={fadedown} className="mb-5">
-          {/* heading */}
-          <h3 className=" fs-1 mb-3 fw-bold">Basic Information</h3>
-          <h5> Tell buyers what you are selling. Be clear and specific.</h5>
+          <h3 className="fs-1 mb-3 fw-bold">Basic Information</h3>
+          <h5>Tell buyers what you are selling. Be clear and specific.</h5>
         </motion.div>
 
-        {/* title */}
+        {/* Product title */}
         <motion.div variants={fadedown}>
-          <Form.Group>
-            <Form.Label className="">Product Title *</Form.Label>
+          <Form.Group controlId="productTitle">
+            <Form.Label>Product Title *</Form.Label>
+
             <Form.Control
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              maxLength={100}
               type="text"
+              value={formData.name ?? ""}
+              onChange={(event) => handleChange("name", event.target.value)}
+              maxLength={100}
               required
+              isInvalid={Boolean(errors.name)}
               placeholder={
-                formData.type === "CAR"
+                type === "CAR"
                   ? "e.g. 2019 Toyota Camry LE Sedan — Black"
-                  : formData.type === "REAL_ESTATE"
+                  : type === "REAL_ESTATE"
                     ? "e.g. 3 Bedroom Furnished Flat — Lekki Phase 1"
                     : "e.g. Nike Air Max 270 — Men's Size 42"
               }
             />
 
-            <p className="mt-3">{formData.name.length}/150 characters</p>
+            <div className="mt-2 text-end">
+              <small>{(formData.name ?? "").length}/100 characters</small>
+            </div>
 
             <div
-              className="p-4 mt-3 d-inline-block"
+              className="p-4 mt-3 d-inline-block rounded"
               style={{ background: "#0f0f0fd2" }}
             >
-              <p>
-                <BsLightbulbFill className="me-4 me-sm-5" color="yellow" /> Tips
-                for a great title
+              <p className="fw-semibold">
+                <BsLightbulbFill className="me-3" color="yellow" />
+                Tips for a great title
               </p>
 
-              <div>
-                {formData.type === "CAR"
-                  ? [
-                      {
-                        key: "Vehicle",
-                        a: "Include year, brand, model and condition.",
-                        b: "2019 Toyota Camry LE — Foreign Used, Black, Lagos",
-                      },
-                    ]
-                  : formData.type === "Real_Estate"
-                    ? [
-                        {
-                          key: "Real_estate",
-                          a: "Include bedrooms, property type and location.",
-                          b: " 3 Bedroom Duplex For Rent — Lekki Phase 1, Lagos",
-                        },
-                      ]
-                    : [
-                        {
-                          key: "Regular",
-                          a: "Include brand, product name and key feature.",
-                          b: "Nike Air Max 270 — Men's Running Shoes, Black, Size 42",
-                        },
-                      ].map((tips) => {
-                        return (
-                          <div key={tips.key} className="my-2">
-                            <BsArrowRight className="me-2" /> {tips.a}
-                            <p>
-                              <Check color="green" /> {tips.b}
-                            </p>
-                          </div>
-                        );
-                      })}
+              <div className="my-2">
+                <p>
+                  <BsArrowRight className="me-2" />
+                  {titleTips.description}
+                </p>
+
+                <p className="mb-0">
+                  <Check color="green" className="me-2" />
+                  {titleTips.example}
+                </p>
               </div>
             </div>
 
             {errors.name && (
-              <h6 className="text-danger fw-bold mt-3">{errors.name}</h6>
+              <div className="text-danger fw-bold mt-3" role="alert">
+                {errors.name}
+              </div>
             )}
           </Form.Group>
         </motion.div>
 
-        {/* description */}
-        <motion.div variants={fadedown} className=" my-5 py-5">
-          <Form.Group>
+        {/* Description */}
+        <motion.div variants={fadedown} className="my-5 py-3">
+          <Form.Group controlId="productDescription">
             <Form.Label>Description *</Form.Label>
 
             <Form.Control
               as="textarea"
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
+              value={formData.description ?? ""}
+              onChange={(event) =>
+                handleChange("description", event.target.value)
+              }
               maxLength={2000}
               rows={6}
               required
+              isInvalid={Boolean(errors.description)}
+              placeholder="Describe the item, its features, condition and any important details buyers should know."
             />
 
-            <p className="my-3">
-              {formData.description.length}/2000 characters
-            </p>
+            <div className="my-2 text-end">
+              <small>
+                {(formData.description ?? "").length}/2000 characters
+              </small>
+            </div>
 
-            {/* description tips */}
-            <div
-              className="p-4  d-inline-block"
-              style={{ background: "#0f0f0fd2" }}
-            >
-              <p>
-                <BsLightbulbFill className="me-4 me-sm-5" color="yellow" />{" "}
-                Included in your description:
+            <div className="p-4 rounded" style={{ background: "#0f0f0fd2" }}>
+              <p className="fw-semibold">
+                <BsLightbulbFill className="me-3" color="yellow" />
+                Include these details in your description
               </p>
 
-              <Row className=" mt-2">
-                {(formData.type === "CAR"
-                  ? [
-                      "Vehicle history",
-                      "Service records",
-                      "Known issues",
-                      "Why selling",
-                      "Import year",
-                      "Current location",
-                    ]
-                  : formData.type === "Real_Estate"
-                    ? [
-                        "What is included",
-                        "Estate details",
-                        "Nearby landmarks",
-                        "Transportation access",
-                        "Agency fee info",
-                        "Landlord terms",
-                      ]
-                    : [
-                        "Key features",
-                        "Dimensions/size",
-                        "Materials used",
-                        "Package contents",
-                        "Care instructions",
-                        "Warranty info",
-                      ]
-                ).map((tips) => {
-                  return (
-                    <Col key={tips} className="col-auto">
-                      {" "}
-                      <div className="d-flex align-items-center gap-3">
-                        <p>
-                          {" "}
-                          <Check color="green" />{" "}
-                        </p>
-                        <p>{tips}</p>
-                      </div>
-                    </Col>
-                  );
-                })}
+              <Row className="mt-3 g-2">
+                {descriptionTips.map((tip) => (
+                  <Col key={tip} xs={12} sm={6} lg={4}>
+                    <div className="d-flex align-items-start gap-2">
+                      <Check color="green" className="mt-1 flex-shrink-0" />
+                      <span>{tip}</span>
+                    </div>
+                  </Col>
+                ))}
               </Row>
             </div>
 
             {errors.description && (
-              <h6 className="text-danger fw-bold mt-3">{errors.description}</h6>
+              <div className="text-danger fw-bold mt-3" role="alert">
+                {errors.description}
+              </div>
             )}
           </Form.Group>
         </motion.div>
 
-        {/* condition */}
+        {/* Condition */}
         <motion.div variants={fadedown}>
           <Form.Group>
             <Form.Label>Condition *</Form.Label>
 
-            {conditions.map((c) => {
-              return (
-                <div key={c} className="py-2 " style={{ cursor: "pointer" }}>
-                  <Form.Check
-                    type="radio"
-                    label={c}
-                    value={c}
-                    checked={formData.condition === c}
-                    onChange={(e) => handleChange("condition", e.target.value)}
-                    required
-                    isInvalid={!!errors.condition}
-                  />
-                </div>
-              );
-            })}
+            {conditions.map((condition) => (
+              <Form.Check
+                key={condition}
+                type="radio"
+                name="productCondition"
+                id={`condition-${condition
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")}`}
+                className="py-2"
+                label={condition}
+                value={condition}
+                checked={formData.condition === condition}
+                onChange={() => handleChange("condition", condition)}
+                isInvalid={Boolean(errors.condition)}
+              />
+            ))}
 
             {errors.condition && (
-              <h6 className="text-danger fw-bold mt-2">{errors.condition}</h6>
+              <div className="text-danger fw-bold mt-2" role="alert">
+                {errors.condition}
+              </div>
+            )}
+
+            {type === "CAR" && (
+              <small className="d-block mt-2 text-secondary">
+                Select the vehicle's usage condition. Keep details such as
+                import history and registration status in the listing
+                description or vehicle details.
+              </small>
+            )}
+
+            {type === "REAL_ESTATE" && (
+              <small className="d-block mt-2 text-secondary">
+                Describe the property's building condition accurately in the
+                description as well.
+              </small>
             )}
           </Form.Group>
         </motion.div>
 
-        {/* keywords */}
-        <motion.div variants={fadedown} className="my-5 py-5">
-          <Form.Group>
+        {/* Keywords */}
+        <motion.div variants={fadedown} className="my-5 py-3">
+          <Form.Group controlId="productKeywords">
             <Form.Label>
-              Keywords / Tags <span>(optional · max 10)</span>{" "}
+              Keywords / Tags <span>(optional · max 10)</span>
             </Form.Label>
 
-            <div className="d-flex align-items-center gap-3">
-              <Form.Control
-                value={keywordInput}
-                onChange={(e) => setKeywordInput(e.target.value)}
-                type="text"
-                placeholder="Type a keyword and press Enter"
-                onKeyDown={handleKeywordKeyDown}
-                isInvalid={!!errors.keywords}
-              />
+            <div className="d-flex align-items-start gap-3">
+              <div className="flex-grow-1">
+                <Form.Control
+                  value={keywordInput}
+                  onChange={(event) => setKeywordInput(event.target.value)}
+                  onKeyDown={handleKeywordKeyDown}
+                  type="text"
+                  maxLength={40}
+                  placeholder="Type a keyword and press Enter"
+                  isInvalid={Boolean(errors.keywords)}
+                />
+              </div>
+
               <button
-                className="px-3 py-1"
+                type="button"
                 onClick={addKeyword}
-                disabled={
-                  !keywordInput.trim() || formData.keywords.length >= 10
-                }
+                disabled={!keywordInput.trim() || keywords.length >= 10}
+                className="px-3 py-2"
                 style={{
                   background: "none",
                   border: "0.5px solid #c1d31d",
@@ -278,65 +301,76 @@ export function BasicInfo({
                   color: "#fbff00",
                   cursor: "pointer",
                   opacity:
-                    !keywordInput.trim() || formData.keywords.length >= 10
-                      ? 0.4
-                      : 1,
+                    !keywordInput.trim() || keywords.length >= 10 ? 0.4 : 1,
                 }}
               >
                 Add
               </button>
             </div>
 
-            <Form.Control.Feedback
-              className="text-danger d-block mt-2"
-              type="Invalid"
-            >
-              {errors.keywords}
-            </Form.Control.Feedback>
-
-            {/* tags */}
-            {formData.keywords.length > 0 && (
-              <div className="d-flex align-items-center gap-4 my-3 flex-wrap">
-                {formData.keywords.map((kw) => {
-                  return (
-                    <div
-                      key={kw}
-                      className="d-flex align-items-center gap-3 px-2 py-1"
-                      style={{
-                        border: "0.5px solid #14bb5a",
-                        borderRadius: 8,
-                      }}
-                    >
-                      <div>{kw}</div>
-
-                      <p
-                        className="fs-3 "
-                        onClick={() => removeKeyword(kw)}
-                        style={{ cursor: "pointer", opacity: 0.5 }}
-                      >
-                        x
-                      </p>
-                    </div>
-                  );
-                })}
+            {errors.keywords && (
+              <div className="text-danger mt-2" role="alert">
+                {errors.keywords}
               </div>
             )}
 
-            <p>
-              {formData.keywords.length}/10 keywords · Helps buyers find your
-              listing through search
-            </p>
+            {keywords.length > 0 && (
+              <div className="d-flex align-items-center gap-3 my-3 flex-wrap">
+                {keywords.map((keyword) => (
+                  <div
+                    key={keyword}
+                    className="d-flex align-items-center gap-2 px-3 py-1"
+                    style={{
+                      border: "0.5px solid #14bb5a",
+                      borderRadius: 8,
+                    }}
+                  >
+                    <span>{keyword}</span>
+
+                    <button
+                      type="button"
+                      aria-label={`Remove ${keyword}`}
+                      onClick={() => removeKeyword(keyword)}
+                      className="border-0 bg-transparent"
+                      style={{
+                        color: "inherit",
+                        cursor: "pointer",
+                        fontSize: 18,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <small>
+              {keywords.length}/10 keywords · Helps buyers find your listing
+              through search
+            </small>
           </Form.Group>
         </motion.div>
       </motion.div>
 
       <div className="d-flex align-items-center justify-content-between">
-        <button onClick={handleBack} className="px-3 py-2  next-btn">
-          <BsArrowLeft style={{ color: "#facc15", fontSize: "35px" }} />
+        <button
+          type="button"
+          onClick={handleBack}
+          className="px-3 py-2 next-btn"
+          aria-label="Go back"
+        >
+          <BsArrowLeft style={{ color: "#facc15", fontSize: 35 }} />
         </button>
 
-        <button onClick={next} className="px-3 py-2 next-btn">
-          <BsArrowRight style={{ color: "#facc15", fontSize: "35px" }} />
+        <button
+          type="button"
+          onClick={next}
+          className="px-3 py-2 next-btn"
+          aria-label="Continue to the next step"
+        >
+          <BsArrowRight style={{ color: "#facc15", fontSize: 35 }} />
         </button>
       </div>
     </>

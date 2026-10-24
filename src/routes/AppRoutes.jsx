@@ -127,9 +127,9 @@ function AppRoutes() {
           <Route
             path="/create-store"
             element={
-              <ProtectedRoute>
-                <GetStore />
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              <GetStore />
+              //</ProtectedRoute>
             }
           />
           <Route

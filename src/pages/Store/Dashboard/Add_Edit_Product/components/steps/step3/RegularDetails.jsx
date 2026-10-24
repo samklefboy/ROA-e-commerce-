@@ -1,5 +1,5 @@
 import { Form, Row, Col } from "react-bootstrap";
-import { fadedown, container } from "../../../../../../../animation.js";
+import { fadedown, container } from "../../../../../../../utils/animation.js";
 import { motion } from "framer-motion";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import { useState } from "react";
@@ -17,14 +17,6 @@ const CATEGORIES = [
   "Books",
   "Health",
   "Other",
-];
-
-const DELIVERY_TIMES = [
-  "Same day",
-  "1-2 business days",
-  "2-3 business days",
-  "3-5 business days",
-  "1-2 weeks",
 ];
 
 const GENDER_OPTIONS = ["Men", "Women", "Unisex", "Boys", "Girls", "Baby"];
@@ -254,31 +246,6 @@ export function RegularDetails({
             </div>
           </motion.div>
         )}
-
-        {/* estimated delivery time */}
-
-        <motion.div variants={fadedown} className="my-5 py-2">
-          <Form.Group>
-            <Form.Label>Estimated delivery time *</Form.Label>
-
-            {DELIVERY_TIMES.map((t) => {
-              return (
-                <div key={t} className="py-1">
-                  {" "}
-                  <Form.Check
-                    label={t}
-                    checked={formData.deliveryTime === t}
-                    value={t}
-                    onChange={(e) =>
-                      handleChange("deliveryTime", e.target.value)
-                    }
-                    type="radio"
-                  />
-                </div>
-              );
-            })}
-          </Form.Group>
-        </motion.div>
       </motion.div>
 
       <div className="d-flex align-items-center justify-content-between">

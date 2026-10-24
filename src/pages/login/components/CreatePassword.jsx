@@ -57,7 +57,7 @@ export default function CreatePasswordPage() {
 
       setSession({
         user: data.user,
-        accessToken: data.token,
+        accessToken: data.accessToken,
       });
 
       navigate("/", {

@@ -1,32 +1,8 @@
 .hero_section {
-  background: linear-gradient(135deg, #022c22 0%, #065f46 40%, #15803d 100%);
+  // background: linear-gradient(135deg, #022c22 0%, #065f46 40%, #15803d 100%);
   overflow: hidden;
   position: relative;
   padding: 100px 0;
-
-  &::before {
-    content: "";
-    position: absolute;
-    background: #ddb40f91;
-    opacity: 0.8;
-    width: 400px;
-    height: 400px;
-    border-radius: 50%;
-    top: -200px;
-    right: 200px;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    width: 350px;
-    height: 350px;
-    background: #1dac4a;
-    opacity: 1.2;
-    border-radius: 50%;
-    bottom: -120;
-    left: -120;
-  }
 
   .hero-badge {
     background: #facc15 !important;
