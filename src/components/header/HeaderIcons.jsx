@@ -55,15 +55,19 @@ const HeaderIcons = ({
 
       {!user && (
         <div className="header-icons ">
-          <Nav.Link className="d-md-none ms-auto">
-            <FiSearch size={24} color="white" />
-          </Nav.Link>
-          <Nav.Link as={Link} to="/cart">
-            <FiShoppingCart size={24} />{" "}
-            <Badge pill bg="warning">
-              2
-            </Badge>
-          </Nav.Link>
+          {showSearchbtn && (
+            <Nav.Link className="d-md-none ms-auto">
+              <FiSearch size={24} color="white" />
+            </Nav.Link>
+          )}
+          {showCart && (
+            <Nav.Link as={Link} to="/cart">
+              <FiShoppingCart size={24} />
+              <Badge pill className=" p-1">
+                <div>2</div>
+              </Badge>
+            </Nav.Link>
+          )}
         </div>
       )}
     </>

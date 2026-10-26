@@ -502,451 +502,480 @@ export const Dashboard = () => {
 
   return (
     <section className="roa-dashboard pt-4 pt-lg-5">
-      <style>{`
-        .roa-dashboard{min-height:100vh;background:#080b09;color:#f6f7f2;padding-bottom:4rem}
-        .roa-dashboard .roa-muted{color:#9ba69e}
-        .roa-dashboard .roa-panel,.roa-dashboard .roa-stat-card{background:linear-gradient(145deg,#111813,#0d120e);border:1px solid #253329;border-radius:20px}
-        .roa-dashboard .roa-panel{padding:clamp(18px,2.5vw,28px);height:100%}
-        .roa-dashboard .roa-stat-card{padding:20px;box-shadow:0 12px 35px #0003;transition:transform .18s ease,border-color .18s ease}
-        .roa-dashboard .roa-stat-card-button{display:block;width:100%;text-align:left;color:inherit;cursor:pointer;font:inherit}
-        .roa-dashboard .roa-stat-card-button:focus-visible,.roa-dashboard .roa-dashboard-row-button:focus-visible{outline:2px solid #d8d51a;outline-offset:3px}
-        .roa-dashboard .roa-dashboard-row-button{width:100%;text-align:left;color:inherit;font:inherit;background:transparent;border:0;cursor:pointer}
-        .roa-dashboard .roa-dashboard-row-button:hover .roa-order-name,.roa-dashboard .roa-dashboard-row-button:hover .roa-product-name{color:#dedb23}
-        .roa-dashboard .roa-stat-card:hover{transform:translateY(-2px);border-color:#64751e}
-        .roa-dashboard .roa-stat-value{font-size:clamp(1.25rem,2.3vw,1.8rem);font-weight:750;letter-spacing:-.04em;overflow-wrap:anywhere}
-        .roa-dashboard .roa-stat-detail{font-size:.8rem;color:#9ba69e}
-        .roa-dashboard .roa-stat-icon{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;font-size:1.15rem}
-        .roa-dashboard .roa-stat-icon-yellow{background:#d8d51a18;color:#e5df29}
-        .roa-dashboard .roa-stat-icon-green{background:#00d68f18;color:#00d68f}
-        .roa-dashboard .roa-stat-icon-blue{background:#61b7ff18;color:#61b7ff}
-        .roa-dashboard .roa-stat-icon-orange{background:#ffb45418;color:#ffb454}
-        .roa-dashboard .roa-panel-title{font-size:1.05rem;font-weight:700;color:#f5f7f1}
-        .roa-dashboard .roa-welcome{padding:clamp(24px,4vw,38px);border-radius:22px;background:radial-gradient(circle at 85% 15%,#e0dd2527,transparent 35%),linear-gradient(115deg,#17241a,#101611 70%);border:1px solid #35462b}
-        .roa-dashboard .roa-eyebrow{color:#d9d62a;text-transform:uppercase;font-size:.72rem;font-weight:800;letter-spacing:.14em}
-        .roa-dashboard .roa-welcome h1{font-size:clamp(1.7rem,3vw,2.35rem);font-weight:800;letter-spacing:-.045em}
-        .roa-dashboard .roa-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid #324435;border-radius:999px;font-size:.8rem;color:#d9e1d9;background:#0b110d}
-        .roa-dashboard .roa-pill-dot{width:7px;height:7px;border-radius:50%;background:#9ba69e}
-        .roa-dashboard .roa-pill-open .roa-pill-dot{background:#00d68f;box-shadow:0 0 10px #00d68f88}
-        .roa-dashboard .roa-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #d8d51a;background:#d8d51a;color:#10130b;border-radius:11px;padding:10px 14px;font-size:.88rem;font-weight:750;text-decoration:none}
-        .roa-dashboard .roa-btn:hover{background:#f1ed3d;color:#10130b}
-        .roa-dashboard .roa-btn-outline{background:transparent;color:#e8e9df;border-color:#3b493b}
-        .roa-dashboard .roa-btn-outline:hover{background:#182219;color:#fff}
-        .roa-dashboard .roa-periods{display:flex;gap:5px;padding:4px;border:1px solid #29372c;background:#0a100c;border-radius:11px}
-        .roa-dashboard .roa-period-button{border:0;background:transparent;color:#aab4ab;border-radius:8px;padding:7px 10px;font-size:.8rem;white-space:nowrap}
-        .roa-dashboard .roa-period-button.active{background:#d8d51a;color:#12150c;font-weight:800}
-        .roa-dashboard .roa-chart-wrap{width:100%}
-        .roa-dashboard .roa-revenue-svg{width:100%;height:clamp(190px,28vw,260px);overflow:visible;display:block}
-        .roa-dashboard .roa-chart-grid{stroke:#29352c;stroke-width:1;stroke-dasharray:4 6}
-        .roa-dashboard .roa-chart-line{fill:none;stroke:#dedb23;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-        .roa-dashboard .roa-chart-point{fill:#dedb23;stroke:#111813;stroke-width:2}
-        .roa-dashboard .roa-chart-label{fill:#8d9b90;font-size:12px}
-        .roa-dashboard .roa-chart-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-        .roa-dashboard .roa-chart-footer>span:first-child{display:flex;align-items:center;gap:8px;font-size:.82rem}
-        .roa-dashboard .roa-chart-legend-dot{width:8px;height:8px;border-radius:50%;background:#dedb23}
-        .roa-dashboard .roa-chart-state,.roa-dashboard .roa-chart-empty{min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center}
-        .roa-dashboard .roa-chart-empty h3{font-size:1rem;margin:0}
-        .roa-dashboard .roa-empty-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#d8d51a16;color:#dedb23;font-size:1.25rem}
-        .roa-dashboard .roa-earning-total{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:800;letter-spacing:-.05em}
-        .roa-dashboard .roa-earning-metric{padding:14px;background:#0a100c;border:1px solid #29372c;border-radius:13px}
-        .roa-dashboard .roa-earning-metric strong{display:block;margin-top:6px;font-size:1rem}
-        .roa-dashboard .roa-order-row,.roa-dashboard .roa-product-row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid #243027}
-        .roa-dashboard .roa-order-row:last-child,.roa-dashboard .roa-product-row:last-child{border-bottom:0;padding-bottom:0}
-        .roa-dashboard .roa-order-avatar{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;background:#d8d51a14;color:#e4df26}
-        .roa-dashboard .roa-order-name,.roa-dashboard .roa-product-name{font-size:.88rem;color:#f2f5ef;overflow:hidden;text-overflow:ellipsis}
-        .roa-dashboard .roa-order-total,.roa-dashboard .roa-product-revenue{font-size:.88rem;white-space:nowrap;color:#f3f5ed}
-        .roa-dashboard .roa-status{font-size:.67rem;text-transform:capitalize;padding:4px 7px;border-radius:99px;background:#ffffff0d;color:#c4ccc4;white-space:nowrap}
-        .roa-dashboard .roa-status-success{color:#50e2a4;background:#50e2a414}
-        .roa-dashboard .roa-status-warning{color:#e8d74b;background:#e8d74b14}
-        .roa-dashboard .roa-status-danger{color:#ff8585;background:#ff858514}
-        .roa-dashboard .roa-status-info{color:#80c9ff;background:#80c9ff14}
-        .roa-dashboard .roa-status-muted{color:#aab4ab;background:#ffffff0d}
-        .roa-dashboard .roa-product-image{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:#202b22;color:#b3bdab}
-        .roa-dashboard .roa-product-image img{width:100%;height:100%;object-fit:cover}
-        .roa-dashboard .roa-performance-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0;border-bottom:1px solid #243027}
-        .roa-dashboard .roa-performance-item:last-child{border-bottom:0;padding-bottom:0}
-        .roa-dashboard .roa-performance-item strong{color:#f5f7f1}
-        .roa-dashboard .roa-alert{padding:14px 16px;border:1px solid #684b2b;background:#251b10;border-radius:13px;color:#f5d5a4}
-        .roa-dashboard .roa-min-height{min-height:100%}
-        @media(max-width:575px){.roa-dashboard .roa-panel{border-radius:16px}.roa-dashboard .roa-stat-card{padding:15px}.roa-dashboard .roa-stat-icon{width:35px;height:35px;flex-basis:35px}.roa-dashboard .roa-period-button{padding:7px 8px;font-size:.74rem}.roa-dashboard .roa-order-row{gap:8px}.roa-dashboard .roa-order-avatar{display:none}.roa-dashboard .roa-order-total{font-size:.78rem}}
-      `}</style>
-
       <TopNav selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
 
       <Container className="pt-4 pt-lg-5">
         {selectedTab === "Overview" && (
-          <div className="d-flex flex-column gap-4">
-            <header className="roa-welcome">
-              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
-                <div>
-                  <p className="roa-eyebrow mb-2">Seller workspace</p>
-                  <h1 className="mb-2">
-                    Welcome back{store.name ? ` to ${store.name}` : ""}
-                  </h1>
-                  <p className="roa-muted mb-3">
-                    Your store at a glance. Review orders, track revenue, and
-                    keep your listings moving.
-                  </p>
-                  <span
-                    className={`roa-pill ${storeOpen ? "roa-pill-open" : ""}`}
-                  >
-                    <span className="roa-pill-dot" />
-                    {storeOpen
-                      ? "Store is open"
-                      : `Store status: ${String(store.status || "UNKNOWN").toLowerCase()}`}
-                  </span>
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="roa-btn roa-btn-outline"
-                    onClick={refresh}
-                    disabled={refreshing}
-                  >
-                    <FiRefreshCw className={refreshing ? "roa-spinning" : ""} />{" "}
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    className="roa-btn"
-                    onClick={() => setSelectedTab("Products")}
-                  >
-                    Manage products <FiArrowRight />
-                  </button>
-                </div>
-              </div>
-            </header>
-
-            {error && (
-              <div
-                className="roa-alert d-flex align-items-start gap-2"
-                role="alert"
-              >
-                <FiAlertCircle className="mt-1 flex-shrink-0" />
-                <div className="flex-grow-1">
-                  <strong>Dashboard data unavailable</strong>
-                  <p className="mb-2 mt-1">{error}</p>
-                  <button
-                    type="button"
-                    className="roa-btn roa-btn-outline"
-                    onClick={refresh}
-                  >
-                    Try again
-                  </button>
-                </div>
-              </div>
-            )}
-
+          <div className="d-flex flex-column gap-4 py-5">
             <Row className="g-3">
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Today's sales"
-                  value={loading ? "—" : money(stats.todaySales, true)}
-                  detail="Gross sales recorded today"
-                  icon={FiDollarSign}
-                  tone="yellow"
-                />
-              </Col>
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Total orders"
-                  value={loading ? "—" : number(stats.totalOrders)}
-                  detail="Orders associated with your store · View orders"
-                  icon={FiShoppingBag}
-                  tone="blue"
-                  onClick={() => setSelectedTab("Orders")}
-                />
-              </Col>
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Active products"
-                  value={loading ? "—" : number(stats.activeProducts)}
-                  detail="Listings currently active · Manage products"
-                  icon={FiPackage}
-                  tone="green"
-                  onClick={() => setSelectedTab("Products")}
-                />
-              </Col>
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Seller earnings"
-                  value={loading ? "—" : money(stats.sellerEarnings, true)}
-                  detail="Funds released from your store orders in this period"
-                  icon={FiDollarSign}
-                  tone="green"
-                />
-              </Col>
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Pending orders"
-                  value={loading ? "—" : number(stats.pendingOrders)}
-                  detail="Orders needing your attention · View orders"
-                  icon={FiClock}
-                  tone="orange"
-                  onClick={() => setSelectedTab("Orders")}
-                />
-              </Col>
-              <Col xs={6} xl={4}>
-                <StatCard
-                  title="Low stock"
-                  value={loading ? "—" : number(stats.lowStockProducts)}
-                  detail="Products at or below the stock threshold · Manage products"
-                  icon={FiBox}
-                  tone="yellow"
-                  onClick={() => setSelectedTab("Products")}
-                />
-              </Col>
-            </Row>
-
-            <Row className="g-3 align-items-stretch">
-              <Col xs={12} xl={8}>
-                <Panel
-                  title="Revenue overview"
-                  subtitle="Track sales revenue over time"
-                  action={
-                    <div
-                      className="roa-periods"
-                      role="group"
-                      aria-label="Revenue chart period"
-                    >
-                      {PERIODS.map((option) => (
-                        <button
-                          type="button"
-                          key={option.value}
-                          className={`roa-period-button ${period === option.value ? "active" : ""}`}
-                          aria-pressed={period === option.value}
-                          onClick={() => setPeriod(option.value)}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  }
-                >
-                  <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+              <Col className="col-xxl-7">
+                <header className="roa-welcome">
+                  <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
                     <div>
-                      <p className="roa-muted mb-1 small">
-                        Revenue in selected period
+                      <h1 className="mb-2" style={{ lineHeight: 1 }}>
+                        Welcome back
+                        {store.name ? ` to ${store.name}` : ""}
+                      </h1>
+                      <p className="roa-muted mb-3">
+                        Your store at a glance. Review orders, track revenue,
+                        and keep your listings moving.
                       </p>
-                      <div className="roa-earning-total">
-                        {loading ? "—" : money(stats.periodRevenue)}
-                      </div>
-                    </div>
-                    {revenueChange !== null && !loading && (
                       <span
-                        className={`d-inline-flex align-items-center gap-1 small ${revenueChange >= 0 ? "text-success" : "text-danger"}`}
+                        className={`roa-pill ${storeOpen ? "roa-pill-open" : ""}`}
                       >
-                        {revenueChange >= 0 ? (
-                          <FiArrowUpRight />
-                        ) : (
-                          <FiArrowDownRight />
-                        )}
-                        {Math.abs(revenueChange).toFixed(1)}% vs previous period
+                        <span className="roa-pill-dot" />
+                        {storeOpen
+                          ? "Store is open"
+                          : `Store status: ${String(store.status || "UNKNOWN").toLowerCase()}`}
                       </span>
-                    )}
+                    </div>
+                    <div className="d-flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="roa-btn roa-btn-outline"
+                        onClick={refresh}
+                        disabled={refreshing}
+                      >
+                        <FiRefreshCw
+                          className={refreshing ? "roa-spinning" : ""}
+                        />{" "}
+                        Refresh
+                      </button>
+                      <button
+                        type="button"
+                        className="roa-btn"
+                        onClick={() => setSelectedTab("Products")}
+                      >
+                        Manage products <FiArrowRight />
+                      </button>
+                    </div>
                   </div>
-                  <RevenueChart
-                    points={overview.revenue}
-                    period={period}
-                    loading={loading}
-                  />
-                </Panel>
-              </Col>
+                </header>
 
-              <Col xs={12} xl={4}>
-                <Panel
-                  title="Earnings snapshot"
-                  subtitle="Store-specific funds, separate from your shared wallet"
-                >
-                  <p className="roa-muted small mb-1">
-                    Seller earnings for this period
-                  </p>
-                  <div className="roa-earning-total mb-4">
-                    {loading ? "—" : money(stats.sellerEarnings)}
-                  </div>
-                  <div className="roa-earning-metric mb-2">
-                    <div className="d-flex align-items-center justify-content-between gap-2">
-                      <span className="roa-muted small">
-                        Order funds still held
-                      </span>
-                      <FiClock className="text-warning" />
-                    </div>
-                    <strong>{loading ? "—" : money(stats.heldEarnings)}</strong>
-                  </div>
-                  <div className="roa-earning-metric mb-4">
-                    <div className="d-flex align-items-center justify-content-between gap-2">
-                      <span className="roa-muted small">
-                        Platform commission
-                      </span>
-                      <FiDollarSign className="roa-muted" />
-                    </div>
-                    <strong>
-                      {loading ? "—" : money(stats.platformCommission)}
-                    </strong>
-                  </div>
-                  <button
-                    type="button"
-                    className="roa-btn w-100"
-                    onClick={() => navigate("/wallet")}
+                {error && (
+                  <div
+                    className="roa-alert d-flex align-items-start gap-2"
+                    role="alert"
                   >
-                    Manage wallet <FiArrowRight />
-                  </button>
-                </Panel>
-              </Col>
-            </Row>
+                    <FiAlertCircle className="mt-1 flex-shrink-0" />
+                    <div className="flex-grow-1">
+                      <strong>Dashboard data unavailable</strong>
+                      <p className="mb-2 mt-1">{error}</p>
+                      <button
+                        type="button"
+                        className="roa-btn roa-btn-outline"
+                        onClick={refresh}
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-            <Row className="g-3 align-items-stretch">
-              <Col xs={12} xl={7}>
-                <Panel
-                  title="Recent orders"
-                  subtitle="The latest activity from your store"
-                  action={
-                    <button
-                      type="button"
-                      className="roa-btn roa-btn-outline"
+                <Row className="g-5 my-auto">
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Today's sales"
+                      value={loading ? "—" : money(stats.todaySales, true)}
+                      detail="Gross sales recorded today"
+                      icon={FiDollarSign}
+                      tone="yellow"
+                    />
+                  </Col>
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Total orders"
+                      value={loading ? "—" : number(stats.totalOrders)}
+                      detail="Orders associated with your store · View orders"
+                      icon={FiShoppingBag}
+                      tone="blue"
                       onClick={() => setSelectedTab("Orders")}
-                    >
-                      View all <FiArrowRight />
-                    </button>
-                  }
-                >
-                  {loading ? (
-                    <div className="roa-chart-state">
-                      <Spinner animation="border" size="sm" />
-                      <span>Loading orders…</span>
-                    </div>
-                  ) : overview.recentOrders.length ? (
-                    overview.recentOrders
-                      .slice(0, 5)
-                      .map((order, index) => (
-                        <OrderRow
-                          key={order.id || order.orderNumber || index}
-                          order={order}
-                          onClick={() => setSelectedTab("Orders")}
-                        />
-                      ))
-                  ) : (
-                    <div className="roa-chart-empty">
-                      <div className="roa-empty-icon">
-                        <FiShoppingBag />
-                      </div>
-                      <h3>No orders yet</h3>
-                      <p className="roa-muted mb-0">
-                        New orders will appear here when customers buy from your
-                        store.
-                      </p>
-                    </div>
-                  )}
-                </Panel>
+                    />
+                  </Col>
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Active products"
+                      value={loading ? "—" : number(stats.activeProducts)}
+                      detail="Listings currently active · Manage products"
+                      icon={FiPackage}
+                      tone="green"
+                      onClick={() => setSelectedTab("Products")}
+                    />
+                  </Col>
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Seller earnings"
+                      value={loading ? "—" : money(stats.sellerEarnings, true)}
+                      detail="Funds released from your store orders in this period"
+                      icon={FiDollarSign}
+                      tone="green"
+                    />
+                  </Col>
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Pending orders"
+                      value={loading ? "—" : number(stats.pendingOrders)}
+                      detail="Orders needing your attention · View orders"
+                      icon={FiClock}
+                      tone="orange"
+                      onClick={() => setSelectedTab("Orders")}
+                    />
+                  </Col>
+                  <Col xs={6} xl={4} xxl={6}>
+                    <StatCard
+                      title="Low stock"
+                      value={loading ? "—" : number(stats.lowStockProducts)}
+                      detail="Products at or below the stock threshold · Manage products"
+                      icon={FiBox}
+                      tone="yellow"
+                      onClick={() => setSelectedTab("Products")}
+                    />
+                  </Col>
+                </Row>
               </Col>
-              <Col xs={12} xl={5}>
-                <Panel
-                  title="Top-selling products"
-                  subtitle="Best performers in the selected period"
-                  action={
+
+              <Col className="col-xxl-5 d-none d-xxl-flex">
+                <Row className="g-4 align-items-stretch">
+                  <Col className="col-12">
+                    <Panel
+                      title="Recent orders"
+                      subtitle="The latest activity from your store"
+                      action={
+                        <p
+                          style={{ color: "#f9fd03" }}
+                          onClick={() => setSelectedTab("Orders")}
+                        >
+                          View all <FiArrowRight />
+                        </p>
+                      }
+                    >
+                      {loading ? (
+                        <div className="roa-chart-state">
+                          <Spinner animation="border" size="sm" />
+                          <span>Loading orders…</span>
+                        </div>
+                      ) : overview.recentOrders.length ? (
+                        overview.recentOrders
+                          .slice(0, 5)
+                          .map((order, index) => (
+                            <OrderRow
+                              key={order.id || order.orderNumber || index}
+                              order={order}
+                              onClick={() => setSelectedTab("Orders")}
+                            />
+                          ))
+                      ) : (
+                        <div className="roa-chart-empty">
+                          <div className="roa-empty-icon">
+                            <FiShoppingBag />
+                          </div>
+                          <h3>No orders yet</h3>
+                          <p className="roa-muted mb-0">
+                            New orders will appear here when customers buy from
+                            your store.
+                          </p>
+                        </div>
+                      )}
+                    </Panel>
+                  </Col>
+                  <Col className="col-12">
+                    <Panel
+                      title="Top-selling products"
+                      subtitle="Best performers in the selected period"
+                      action={
+                        <p
+                          style={{ color: "#f9fd03" }}
+                          onClick={() => setSelectedTab("Products")}
+                        >
+                          View all <FiArrowRight />
+                        </p>
+                      }
+                    >
+                      {loading ? (
+                        <div className="roa-chart-state">
+                          <Spinner animation="border" size="sm" />
+                          <span>Loading products…</span>
+                        </div>
+                      ) : overview.topProducts.length ? (
+                        overview.topProducts
+                          .slice(0, 5)
+                          .map((product, index) => (
+                            <ProductRow
+                              key={product.id || index}
+                              product={product}
+                              onClick={() => setSelectedTab("Products")}
+                            />
+                          ))
+                      ) : (
+                        <div className="roa-chart-empty">
+                          <div className="roa-empty-icon">
+                            <FiPackage />
+                          </div>
+                          <h3>No product sales yet</h3>
+                          <p className="roa-muted mb-0">
+                            Products with sales will appear here once customers
+                            place orders.
+                          </p>
+                        </div>
+                      )}
+                    </Panel>
+                  </Col>
+                </Row>
+              </Col>
+
+              <Row className="g-3 align-items-stretch">
+                <Col xs={12} xl={8}>
+                  <Panel
+                    title="Revenue overview"
+                    subtitle="Track sales revenue over time"
+                    action={
+                      <div
+                        className="roa-periods"
+                        role="group"
+                        aria-label="Revenue chart period"
+                      >
+                        {PERIODS.map((option) => (
+                          <button
+                            type="button"
+                            key={option.value}
+                            className={`roa-period-button ${period === option.value ? "active" : ""}`}
+                            aria-pressed={period === option.value}
+                            onClick={() => setPeriod(option.value)}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    }
+                  >
+                    <div className="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+                      <div>
+                        <p className="roa-muted mb-1 small">
+                          Revenue in selected period
+                        </p>
+                        <div className="roa-earning-total">
+                          {loading ? "—" : money(stats.periodRevenue)}
+                        </div>
+                      </div>
+                      {revenueChange !== null && !loading && (
+                        <span
+                          className={`d-inline-flex align-items-center gap-1 small ${revenueChange >= 0 ? "text-success" : "text-danger"}`}
+                        >
+                          {revenueChange >= 0 ? (
+                            <FiArrowUpRight />
+                          ) : (
+                            <FiArrowDownRight />
+                          )}
+                          {Math.abs(revenueChange).toFixed(1)}% vs previous
+                          period
+                        </span>
+                      )}
+                    </div>
+                    <RevenueChart
+                      points={overview.revenue}
+                      period={period}
+                      loading={loading}
+                    />
+                  </Panel>
+                </Col>
+
+                <Col xs={12} xl={4}>
+                  <Panel
+                    title="Earnings snapshot"
+                    subtitle="Store-specific funds, separate from your shared wallet"
+                  >
+                    <p className="roa-muted small mb-1">
+                      Seller earnings for this period
+                    </p>
+                    <div className="roa-earning-total mb-4">
+                      {loading ? "—" : money(stats.sellerEarnings)}
+                    </div>
+                    <div className="roa-earning-metric mb-2">
+                      <div className="d-flex align-items-center justify-content-between gap-2">
+                        <span className="roa-muted small">
+                          Order funds still held
+                        </span>
+                        <FiClock className="text-warning" />
+                      </div>
+                      <strong>
+                        {loading ? "—" : money(stats.heldEarnings)}
+                      </strong>
+                    </div>
+                    <div className="roa-earning-metric mb-4">
+                      <div className="d-flex align-items-center justify-content-between gap-2">
+                        <span className="roa-muted small">
+                          Platform commission
+                        </span>
+                        <FiDollarSign className="roa-muted" />
+                      </div>
+                      <strong>
+                        {loading ? "—" : money(stats.platformCommission)}
+                      </strong>
+                    </div>
                     <button
                       type="button"
-                      className="roa-btn roa-btn-outline"
-                      onClick={() => setSelectedTab("Products")}
+                      className="roa-btn w-100"
+                      onClick={() => navigate("/wallet")}
                     >
-                      Products <FiArrowRight />
+                      Manage wallet <FiArrowRight />
                     </button>
-                  }
-                >
-                  {loading ? (
-                    <div className="roa-chart-state">
-                      <Spinner animation="border" size="sm" />
-                      <span>Loading products…</span>
-                    </div>
-                  ) : overview.topProducts.length ? (
-                    overview.topProducts
-                      .slice(0, 5)
-                      .map((product, index) => (
-                        <ProductRow
-                          key={product.id || index}
-                          product={product}
-                          onClick={() => setSelectedTab("Products")}
-                        />
-                      ))
-                  ) : (
-                    <div className="roa-chart-empty">
-                      <div className="roa-empty-icon">
-                        <FiPackage />
-                      </div>
-                      <h3>No product sales yet</h3>
-                      <p className="roa-muted mb-0">
-                        Products with sales will appear here once customers
-                        place orders.
-                      </p>
-                    </div>
-                  )}
-                </Panel>
-              </Col>
-            </Row>
-
-            <Panel
-              title="Store performance"
-              subtitle="A quick view of your store's reach and fulfilment"
-            >
-              <Row className="g-3">
-                <Col xs={6} md={3}>
-                  <div className="roa-performance-item h-100">
-                    <span className="roa-muted small d-flex align-items-center gap-2">
-                      <FiUsers /> Followers
-                    </span>
-                    <strong>
-                      {loading ? "—" : number(store.followerCount)}
-                    </strong>
-                  </div>
-                </Col>
-                <Col xs={6} md={3}>
-                  <div className="roa-performance-item h-100">
-                    <span className="roa-muted small d-flex align-items-center gap-2">
-                      <FiStar /> Store rating
-                    </span>
-                    <strong>
-                      {loading
-                        ? "—"
-                        : Number(store.averageRating) > 0
-                          ? `${Number(store.averageRating).toFixed(1)} / 5`
-                          : "Not rated"}
-                    </strong>
-                    {!loading && (
-                      <span className="roa-muted small">
-                        {number(store.reviewCount)} reviews
-                      </span>
-                    )}
-                  </div>
-                </Col>
-                <Col xs={6} md={3}>
-                  <div className="roa-performance-item h-100">
-                    <span className="roa-muted small d-flex align-items-center gap-2">
-                      <FiCheckCircle /> Completed orders
-                    </span>
-                    <strong>
-                      {loading ? "—" : number(stats.completedOrders)}
-                    </strong>
-                  </div>
-                </Col>
-                <Col xs={6} md={3}>
-                  <div className="roa-performance-item h-100">
-                    <span className="roa-muted small d-flex align-items-center gap-2">
-                      <FiEye /> Listing views
-                    </span>
-                    <strong>
-                      {loading
-                        ? "—"
-                        : stats.listingViews == null
-                          ? "Not tracked"
-                          : number(stats.listingViews)}
-                    </strong>
-                  </div>
+                  </Panel>
                 </Col>
               </Row>
-              <p className="roa-muted small mt-3 mb-0">
-                Views and response-time analytics will only display once ROA
-                records those events reliably.
-              </p>
-            </Panel>
+
+              <Row className="g-3 align-items-stretch d-flex d-xxl-none">
+                <Col xs={12} xl={7}>
+                  <Panel
+                    title="Recent orders"
+                    subtitle="The latest activity from your store"
+                    action={
+                      <p
+                        style={{ color: "#fdf900" }}
+                        onClick={() => setSelectedTab("Orders")}
+                      >
+                        View all <FiArrowRight />
+                      </p>
+                    }
+                  >
+                    {loading ? (
+                      <div className="roa-chart-state">
+                        <Spinner animation="border" size="sm" />
+                        <span>Loading orders…</span>
+                      </div>
+                    ) : overview.recentOrders.length ? (
+                      overview.recentOrders
+                        .slice(0, 5)
+                        .map((order, index) => (
+                          <OrderRow
+                            key={order.id || order.orderNumber || index}
+                            order={order}
+                            onClick={() => setSelectedTab("Orders")}
+                          />
+                        ))
+                    ) : (
+                      <div className="roa-chart-empty">
+                        <div className="roa-empty-icon">
+                          <FiShoppingBag />
+                        </div>
+                        <h3>No orders yet</h3>
+                        <p className="roa-muted mb-0">
+                          New orders will appear here when customers buy from
+                          your store.
+                        </p>
+                      </div>
+                    )}
+                  </Panel>
+                </Col>
+                <Col xs={12} xl={5}>
+                  <Panel
+                    title="Top-selling products"
+                    subtitle="Best performers in the selected period"
+                    action={
+                      <p
+                        style={{ color: "#fdf900" }}
+                        onClick={() => setSelectedTab("Products")}
+                      >
+                        View all <FiArrowRight />
+                      </p>
+                    }
+                  >
+                    {loading ? (
+                      <div className="roa-chart-state">
+                        <Spinner animation="border" size="sm" />
+                        <span>Loading products…</span>
+                      </div>
+                    ) : overview.topProducts.length ? (
+                      overview.topProducts
+                        .slice(0, 5)
+                        .map((product, index) => (
+                          <ProductRow
+                            key={product.id || index}
+                            product={product}
+                            onClick={() => setSelectedTab("Products")}
+                          />
+                        ))
+                    ) : (
+                      <div className="roa-chart-empty">
+                        <div className="roa-empty-icon">
+                          <FiPackage />
+                        </div>
+                        <h3>No product sales yet</h3>
+                        <p className="roa-muted mb-0">
+                          Products with sales will appear here once customers
+                          place orders.
+                        </p>
+                      </div>
+                    )}
+                  </Panel>
+                </Col>
+              </Row>
+
+              <Panel
+                className="mt-5"
+                title="Store performance"
+                subtitle="A quick view of your store's reach and fulfilment"
+              >
+                <Row className="g-3">
+                  <Col xs={6} md={3}>
+                    <div className="roa-performance-item h-100">
+                      <span className="roa-muted small d-flex align-items-center gap-2">
+                        <FiUsers /> Followers
+                      </span>
+                      <strong>
+                        {loading ? "—" : number(store.followerCount)}
+                      </strong>
+                    </div>
+                  </Col>
+                  <Col xs={6} md={3}>
+                    <div className="roa-performance-item h-100">
+                      <span className="roa-muted small d-flex align-items-center gap-2">
+                        <FiStar /> Store rating
+                      </span>
+                      <strong>
+                        {loading
+                          ? "—"
+                          : Number(store.averageRating) > 0
+                            ? `${Number(store.averageRating).toFixed(1)} / 5`
+                            : "Not rated"}
+                      </strong>
+                      {!loading && (
+                        <span className="roa-muted small">
+                          {number(store.reviewCount)} reviews
+                        </span>
+                      )}
+                    </div>
+                  </Col>
+                  <Col xs={6} md={3}>
+                    <div className="roa-performance-item h-100">
+                      <span className="roa-muted small d-flex align-items-center gap-2">
+                        <FiCheckCircle /> Completed orders
+                      </span>
+                      <strong>
+                        {loading ? "—" : number(stats.completedOrders)}
+                      </strong>
+                    </div>
+                  </Col>
+                  <Col xs={6} md={3}>
+                    <div className="roa-performance-item h-100">
+                      <span className="roa-muted small d-flex align-items-center gap-2">
+                        <FiEye /> Listing views
+                      </span>
+                      <strong>
+                        {loading
+                          ? "—"
+                          : stats.listingViews == null
+                            ? "Not tracked"
+                            : number(stats.listingViews)}
+                      </strong>
+                    </div>
+                  </Col>
+                </Row>
+                <p className="roa-muted small mt-3 mb-0">
+                  Views and response-time analytics will only display once ROA
+                  records those events reliably.
+                </p>
+              </Panel>
+            </Row>
           </div>
         )}
 

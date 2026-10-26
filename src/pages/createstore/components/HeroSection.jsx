@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Container, Badge, Button, Nav } from "react-bootstrap";
 import { BsArrowRight, BsPeople, BsShieldCheck, BsShop } from "react-icons/bs";
 
-export function HeroSection({ setCreate, create }) {
+export function HeroSection({ setCreate, create, setHeroClose, heroClose }) {
   return (
-    <section className="hero_section">
+    <section className={`hero_section ${heroClose ? "d-none" : "d-block"}`}>
       <Container>
         <Badge className="hero-badge px-4 mb-4">
           <h6>Start selling on R.O.A</h6>
@@ -29,7 +30,11 @@ export function HeroSection({ setCreate, create }) {
         </h6>
 
         <div
-          onClick={() => setCreate(!false)}
+          onClick={() => {
+            setCreate(!false);
+            setHeroClose(!false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           className="hero-btn my-5 p-3 py-2 fs-4 d-inline-block ms-2"
           style={{ cursor: "pointer" }}
         >

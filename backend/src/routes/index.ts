@@ -1,0 +1,44 @@
+import { Router } from "express";
+
+import walletRoutes from "./wallet.routes.js";
+import authRoutes from "./auth.routes.js";
+import roaRoutes from "./roa.routes.js";
+import storeRoutes from "./store.routes.js";
+import productRoutes from "./product.routes.js";
+import deliveryRoutes from "./delivery.routes.js";
+import cartRoutes from "./cart.routes.js";
+import addressRoutes from "./address.routes.js";
+import checkoutRoutes from "./checkout.routes.js";
+import orderRoutes from "./order.routes.js";
+import adminRoutes from "./admin.routes.js";
+import dashboardRoutes from "./dashboard.routes.js";
+import disputeRoutes from "./dispute.routes.js";
+import storeFollowRoutes from "./store-follow.routes.js";
+import storeReviewRoutes from "./store-review.routes.js";
+import deliveryEvidenceRoutes from "./delivery-evidence.routes.js";
+import commissionPolicyRoutes from "./commission-policy.routes.js";
+import storeReportRoutes from "./store-report.routes.js";
+import mediaUploadRoutes from "./media-upload.routes.js";
+
+const router = Router();
+
+router.use("/admin", adminRoutes);
+router.use("/auth", authRoutes);
+router.use("/auth", roaRoutes);
+router.use("/store", storeRoutes);
+router.use("/stores", storeFollowRoutes);
+router.use("/stores", storeReviewRoutes);
+router.use("/stores/reports", storeReportRoutes);
+router.use("/products", productRoutes);
+router.use("/delivery", deliveryRoutes);
+router.use("/", deliveryEvidenceRoutes);
+router.use("/cart", cartRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/addresses", addressRoutes);
+router.use("/checkout", checkoutRoutes);
+router.use("/wallet", walletRoutes);
+router.use("/disputes", disputeRoutes);
+router.use("/commission", commissionPolicyRoutes);
+router.use("/orders", orderRoutes);
+router.use("/media", mediaUploadRoutes);
+export default router;

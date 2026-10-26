@@ -1,11 +1,11 @@
 import { useState } from "react";
 import MainHeader from "../../components/MainHeader";
 import { HeroSection } from "../../pages/createstore/components/HeroSection";
-import FormCreation from "../../components/forms/FormCreation";
+import { FormCreation } from "../../components/forms/FormCreation";
 
 export default function GetStore() {
   const [create, setCreate] = useState(false);
-
+  const [heroClose, setHeroClose] = useState(false);
   const [storeData, setStoreData] = useState({
     Name: "",
     Slug: "",
@@ -29,20 +29,26 @@ export default function GetStore() {
 
   return (
     <section>
-      <MainHeader
-        hamburger={false}
-        showNotification={false}
-        search={false}
-        showSearchbtn={!true}
-        showCart={!true}
-        showAuth={!true}
-        ownStore={true}
+      {!heroClose && (
+        <MainHeader
+          hamburger={false}
+          showNotification={false}
+          search={false}
+          showSearchbtn={!true}
+          showCart={false}
+          showAuth={!true}
+        />
+      )}
+
+      <HeroSection
+        setCreate={setCreate}
+        create={create}
+        setHeroClose={setHeroClose}
+        heroClose={heroClose}
       />
 
-      <HeroSection setCreate={setCreate} create={create} />
-
       <div>
-        {create && (
+        {create && heroClose && (
           <>
             <FormCreation
               formData={storeData}
